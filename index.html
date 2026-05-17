@@ -204,7 +204,6 @@
             font-weight: 700;
         }
         .bg-ex { background-color: #4caf50; }
-        .bg-gd { background-color: #ff9800; }
 
         /* --- ゲーム画面用のスタイル --- */
         .game-info {
@@ -447,6 +446,7 @@
         function updateBaseFreqByInstrument() {
             const select = document.getElementById('instrument');
             const selectedOption = select.options[select.selectedIndex];
+            if (!selectedOption) return;
             const freqAttr = selectedOption.getAttribute('data-freq');
             if (freqAttr) {
                 baseBfFreq = parseFloat(freqAttr);
@@ -454,8 +454,10 @@
         }
 
         function clickLogin() {
-            initAudio();
-            nextPage('menu-page');
+            updateBaseFreqByInstrument();
+            initAudio().then(() => {
+                nextPage('menu-page');
+            });
         }
 
         function nextPage(pageId) {
@@ -486,9 +488,10 @@
 
         async function initAudio() {
             try {
-                if (audioContext && audioContext.state === 'running') return;
-                if (audioContext && audioContext.state === 'suspended') {
-                    await audioContext.resume();
+                if (audioContext) {
+                    if (audioContext.state === 'suspended') {
+                        await audioContext.resume();
+                    }
                     return;
                 }
 
@@ -501,6 +504,7 @@
                 dataArray = new Float32Array(analyser.fftSize);
             } catch (err) {
                 console.error("マイク接続エラー: ", err);
+                alert("マイクが許可されていないか、利用できません。マイクの権限をチェックしてください。");
             }
         }
 
@@ -513,7 +517,6 @@
         }
 
         function makeQuestion() {
-            initAudio(); 
             lastCentsDiff = 999;
             document.getElementById('progress').innerHTML = `<i class="ti ti-bolt"></i> 問題 ${currentQuestionNo} / 10`;
             document.getElementById('live-status').innerText = "「基準音をきく」ボタンを押してね";
@@ -661,11 +664,10 @@
                 if (freq === -1) {
                     liveStatus.innerText = "ーーー";
                     pointer.style.left = "50%";
-                    lastCentsDiff = 999; // 音が小さい時はリセット
+                    lastCentsDiff = 999; 
                 } else {
                     let cents = 1200 * Math.log2(freq / currentTargetFreq);
                     
-                    // セントが異常な値（メーター外）の時は描画をリセットしてノイズとして扱う
                     if (isNaN(cents) || cents < -50 || cents > 50) {
                         liveStatus.innerText = "ーーー";
                         pointer.style.left = "50%";
@@ -682,29 +684,24 @@
             requestAnimationFrame(updatePitchLoop);
         }
 
-        // 自己相関法アルゴリズム
+        // 安定性の高い自己相関法（Auto-Correlation）アルゴリズム
         function autoCorrelate(buffer, sampleRate) {
             let size = buffer.length;
             let rms = 0;
+
             for (let i = 0; i < size; i++) {
                 let val = buffer[i];
                 rms += val * val;
             }
             rms = Math.sqrt(rms / size);
             
-            // ★【ここを強化】rms（音の大きさ）が「0.035」未満の小さな雑音は完全にカットする！
-            if (rms < 0.035) return -1; 
+            // 小さすぎる音（雑音）はカット。楽器を鳴らしても反応が鈍い場合はここを 0.005 などに下げてください。
+            if (rms < 0.01) return -1; 
 
-            let r1 = 0, r2 = size - 1, thres = 0.2;
-            for (let i = 0; i < size / 2; i++) {
-                if (Math.abs(buffer[i]) < thres) { r1 = i; break; }
-            }
-            for (let i = size - 1; i >= size / 2; i--) {
-                if (Math.abs(buffer[i]) < thres) { r2 = i; break; }
-            }
-            buffer = buffer.slice(r1, r2);
-            size = buffer.length;
-
+            // 信号のクリッピング（ノイズ低減）
+            let r1 = 0, r2 = size - 1;
+            let thres = 0.2;
+            
             let c = new Float32Array(size);
             for (let i = 0; i < size; i++) {
                 for (let j = 0; j < size - i; j++) {
@@ -712,6 +709,7 @@
                 }
             }
 
+            // ピークの探索
             let d = 0;
             while (c[d] > c[d + 1]) d++;
             let maxval = -1, maxpos = -1;
@@ -721,14 +719,15 @@
                     maxpos = i;
                 }
             }
+            
             let T0 = maxpos;
 
-            let x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
-            let a = (x1 + x3 - 2 * x2) / 2;
-            let b = (x3 - x1) / 2;
-            if (a) T0 = T0 - b / (2 * a);
-
-            return sampleRate / T0;
+            // 許容できる周波数範囲（一般的な楽器の範囲 40Hz〜2000Hz）のバリデーション
+            let freq = sampleRate / T0;
+            if (freq > 40 && freq < 2000) {
+                return freq;
+            }
+            return -1;
         }
     </script>
 
