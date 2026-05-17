@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pitch training！ - 音程トレーニング</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    
+    <style>
+        /* --- 全体共通のスタイル（パステルグラデーション） --- */
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            font-weight: 500;
+            background: linear-gradient(135deg, #ffdee9 0%, #b5fffc 100%);
+            background-attachment: fixed;
+            color: #4a3e3d;
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* スマートフォン表示（最大幅460px・中央寄せ）に対応 */
+        .app-container {
+            background-color: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 10px 30px rgba(245, 141, 158, 0.3);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+        }
+
+        h1 {
+            color: #ff6b8b;
+            font-weight: 900;
+            margin-top: 0;
+            margin-bottom: 24px;
+            font-size: 28px;
+            text-shadow: 2px 2px 0px #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ff7597;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        p {
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            margin-bottom: 20px;
+            border-radius: 24px;
+            border: 2px solid #ffe3e8;
+            font-size: 16px;
+            font-family: inherit;
+            color: #4a3e3d;
+            box-sizing: border-box;
+            background-color: #fff;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: #ff8da1;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            margin-bottom: 12px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #ff7597 0%, #ff8da1 100%);
+            color: white;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 117, 151, 0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 6px rgba(255, 117, 151, 0.3);
+        }
+
+        .page {
+            display: none;
+        }
+
+        #login-page {
+            display: block;
+        }
+
+        /* --- メニュー画面用のスタイル --- */
+        .welcome-box {
+            background-color: #fff5f7;
+            padding: 12px;
+            border-radius: 24px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            border: 1px dashed #ffb3c1;
+        }
+
+        .level-row {
+            margin-bottom: 16px;
+        }
+
+        .level-btn-group {
+            display: table;
+            width: 100%;
+        }
+        .level-cell-main {
+            display: table-cell;
+            width: 82%;
+            vertical-align: middle;
+        }
+        .level-cell-help {
+            display: table-cell;
+            width: 18%;
+            vertical-align: middle;
+            padding-left: 8px;
+        }
+
+        .help-btn {
+            background: #fff;
+            color: #ff7597;
+            border: 2px solid #ffccd5;
+            box-shadow: none;
+            margin: 0;
+            padding: 12px 0;
+            font-size: 18px;
+        }
+        .help-btn:active {
+            background: #fff5f7;
+        }
+
+        .help-panel {
+            display: none;
+            background-color: #fff9fa;
+            border: 2px solid #ffe3e8;
+            border-radius: 24px;
+            padding: 16px;
+            margin-top: 8px;
+            text-align: left;
+            font-size: 14px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .help-panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 15px;
+            color: #d1496a;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .help-panel ol, .help-panel ul {
+            margin: 0 0 10px 0;
+            padding-left: 20px;
+        }
+
+        .help-panel li {
+            margin-bottom: 4px;
+        }
+
+        .badge-demo {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: white;
+            font-weight: 700;
+        }
+        .bg-ex { background-color: #4caf50; }
+        .bg-gd { background-color: #ff9800; }
+
+        /* --- ゲーム画面用のスタイル --- */
+        .game-info {
+            font-size: 13px;
+            color: #8a7e7d;
+            background-color: #f0f0f0;
+            padding: 4px 12px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+
+        .sound-box {
+            background-color: #fff9f5;
+            border: 2px dashed #ffb3c1;
+            padding: 16px;
+            margin-bottom: 20px;
+            border-radius: 24px;
+        }
+        .sound-line {
+            font-size: 18px;
+            margin: 8px 0;
+        }
+        .sound-line strong {
+            color: #ff527b;
+            font-size: 22px;
+        }
+
+        /* メーター */
+        .meter-container {
+            background: linear-gradient(to right, #ffb3ba 0%, #ffdfba 30%, #bffcc6 50%, #ffdfba 70%, #ffb3ba 100%);
+            height: 36px;
+            border-radius: 24px;
+            position: relative;
+            margin: 25px 0 10px 0;
+            border: 2px solid #e0e0e0;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .meter-center {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background-color: #ff4560;
+            z-index: 2;
+        }
+
+        .meter-pointer {
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            width: 4px;
+            height: 48px;
+            background-color: #4a3e3d;
+            border-radius: 2px;
+            transform: translateX(-50%);
+            z-index: 3;
+            transition: left 0.08s ease-out;
+        }
+
+        .live-status {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ff527b;
+            margin: 10px 0;
+            min-height: 24px;
+        }
+
+        /* リザルト画面 */
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(135deg, #fff5f7 0%, #ffe3e8 100%);
+            border: 4px solid #ff7597;
+            border-radius: 50%;
+            display: block;
+            margin: 20px auto;
+            line-height: 132px;
+            font-size: 44px;
+            font-weight: 900;
+            color: #ff4560;
+            box-shadow: 0 6px 16px rgba(255, 117, 151, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1><i class="ti ti-music"></i> pitch training！</h1>
+
+        <div id="login-page" class="page">
+            <h2><i class="ti ti-user-check"></i> 部員ログイン</h2>
+            <p>名前と楽器をえらんでスタート！</p>
+            <input type="text" id="user-name" placeholder="名前を入力してね">
+            
+            <select id="instrument" onchange="updateBaseFreqByInstrument()">
+                <option value="">-- 楽器をえらぶ --</option>
+                <option value="ピッコロ" data-freq="932.33">ピッコロ</option>
+                <option value="フルート" data-freq="466.16">フルート</option>
+                <option value="クラリネット" data-freq="466.16">クラリネット</option>
+                <option value="アルトサックス" data-freq="466.16">アルトサックス</option>
+                <option value="トランペット" data-freq="466.16">トランペット</option>
+                <option value="テナーサックス" data-freq="233.08">テナーサックス</option>
+                <option value="ホルン" data-freq="233.08">ホルン</option>
+                <option value="トロンボーン" data-freq="233.08">トロンボーン</option>
+                <option value="ユーフォニアム" data-freq="233.08">ユーフォニアム</option>
+                <option value="バリトンサックス" data-freq="116.54">バリトンサックス</option>
+                <option value="チューバ" data-freq="116.54">チューバ</option>
+                <option value="木管・金管低音" data-freq="116.54">その他コントラ系低音</option>
+            </select>
+            <button onclick="clickLogin()">メニューへすすむ <i class="ti ti-arrow-right"></i></button>
+        </div>
+
+        <div id="menu-page" class="page">
+            <h2><i class="ti ti-list"></i> トレーニングメニュー</h2>
+            <div id="welcome-message" class="welcome-box"></div>
+            
+            <div class="level-row">
+                <div class="level-btn-group">
+                    <div class="level-cell-main">
+                        <button onclick="initQuiz(1)">レベルⅠ：ユニゾン</button>
+                    </div>
+                    <div class="level-cell-help">
+                        <button class="help-btn" onclick="toggleHelp('help-lv1')">❓</button>
+                    </div>
+                </div>
+                <div id="help-lv1" class="help-panel">
+                    <h3><i class="ti ti-notes"></i> Lv1 あそびかた</h3>
+                    <ol>
+                        <li>基準音と同じ高さをピタッと合わせよう！</li>
+                    </ol>
+                    <h3><i class="ti ti-eye"></i> メーターの見方</h3>
+                    <ul>
+                        <li><span class="badge-demo bg-ex">Excellent</span> ピッチのズレが ±2¢ 以内</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="level-row">
+                <div class="level-btn-group">
+                    <div class="level-cell-main">
+                        <button onclick="initQuiz(2)">レベル 2：パワーコード</button>
+                    </div>
+                    <div class="level-cell-help">
+                        <button class="help-btn" onclick="toggleHelp('help-lv2')">❓</button>
+                    </div>
+                </div>
+                <div id="help-lv2" class="help-panel">
+                    <h3><i class="ti ti-notes"></i> Lv2 あそびかた</h3>
+                    <ol>
+                        <li>基準音の5度上、または4度下のハモりの骨組みを狙います！</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="level-row">
+                <div class="level-btn-group">
+                    <div class="level-cell-main">
+                        <button onclick="initQuiz(3)">レベル 3：純正律長3度</button>
+                    </div>
+                    <div class="level-cell-help">
+                        <button class="help-btn" onclick="toggleHelp('help-lv3')">❓</button>
+                    </div>
+                </div>
+                <div id="help-lv3" class="help-panel">
+                    <h3><i class="ti ti-notes"></i> Lv3 あそびかた</h3>
+                    <ol>
+                        <li>うつくしい和音の「長3度」をねらいます。</li>
+                        <li>平均律より<strong>13.7¢低い音</strong>を、プログラムが自動でメーターの真ん中「0¢」に補正してくれます！真ん中をねらえば完璧にハモるよ！</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-page" class="page">
+            <div id="progress" class="game-info">しんちょく: 1 / 10</div>
+            <h2><i class="ti ti-device-audio-tape"></i> 音を合わせよう！</h2>
+            
+            <div class="sound-box">
+                <div id="ref-sound-text" class="sound-line">基準音: ーーー</div>
+                <div id="target-sound-text" class="sound-line">ねらう音: ーーー</div>
+            </div>
+
+            <button id="play-btn" onclick="playRef()" style="background: linear-gradient(135deg, #20b2aa 0%, #3cb371 100%); box-shadow: 0 4px 12px rgba(32,178,170,0.3); margin-bottom: 20px;">
+                <i class="ti ti-volume"></i> 基準音をきく (2.5秒)
+            </button>
+
+            <p style="margin-bottom: 4px; font-weight: 700;" id="mic-status-title">現在のピッチ</p>
+            
+            <div class="meter-container">
+                <div class="meter-center"></div>
+                <div id="pointer" class="meter-pointer"></div>
+            </div>
+            
+            <div id="live-status" class="live-status">ーーー</div>
+            <p id="meter-caption" style="font-size: 13px; color: #8a7e7d; margin-top: 0;"></p>
+
+            <button id="next-question-btn" onclick="evaluateAndNext()" style="background: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);">
+                決定して次へ <i class="ti ti-arrow-right"></i>
+            </button>
+        </div>
+
+        <div id="result-page" class="page">
+            <h2><i class="ti ti-trophy"></i> トレーニング結果</h2>
+            <p id="result-username">お疲れ様でした！</p>
+            
+            <div id="final-score" class="score-circle">0点</div>
+            
+            <p id="result-comment" style="font-weight: 700; color: #ff527b; min-height: 40px;"></p>
+            <button onclick="nextPage('menu-page')"><i class="ti ti-refresh"></i> もう一度メニューへ</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 音声解析・システム用グローバル変数 ---
+        let audioContext = null;
+        let analyser = null;
+        let dataArray = null;
+        let isPitchLoopRunning = false;
+        
+        // 問題システム用の変数
+        let baseBfFreq = 466.16; // デフォルトは②
+        let currentLevel = 1;
+        let currentQuestionNo = 1; // 1〜10問
+        let totalScore = 0;
+        
+        // 現在の問題データ
+        let currentRefFreq = 466.16;
+        let currentTargetFreq = 466.16;
+        let lastCentsDiff = 999; // 最後に吹いた音のズレ（スコア計算用）
+        let isPlayingRef = false; // 基準音が鳴っている間はマイク入力を無視する
+
+        // 音名配列（実音B♭の前後数半音の範囲、インデックス6がB♭）
+        const NOTE_NAMES = ["G", "A♭", "A", "B♭", "B", "C", "D♭", "D", "E♭", "E", "F", "G♭"];
+        // B♭を基準(0)とした時の各音名の半音差
+        const NOTE_SEMITONES = [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8];
+
+        // 楽器選択が変わったら自動で基準B♭の周波数を設定
+        function updateBaseFreqByInstrument() {
+            const select = document.getElementById('instrument');
+            const selectedOption = select.options[select.selectedIndex];
+            const freqAttr = selectedOption.getAttribute('data-freq');
+            if (freqAttr) {
+                baseBfFreq = parseFloat(freqAttr);
+                console.log(`基準B♭周波数を設定しました: ${baseBfFreq} Hz`);
+            }
+        }
+
+        function clickLogin() {
+            initAudio();
+            nextPage('menu-page');
+        }
+
+        function nextPage(pageId) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.style.display = 'none');
+            document.getElementById(pageId).style.display = 'block';
+
+            if (pageId === 'menu-page') {
+                const name = document.getElementById('user-name').value || '部員';
+                const inst = document.getElementById('instrument').value || 'マイ楽器';
+                document.getElementById('welcome-message').innerHTML = `
+                    <i class="ti ti-sparkles" style="color:#ff7597;"></i> 
+                    こんにちは、<strong>${name}</strong>さん（${inst}）！
+                `;
+                isPitchLoopRunning = false;
+            }
+        }
+
+        function toggleHelp(panelId) {
+            const panel = document.getElementById(panelId);
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                document.querySelectorAll('.help-panel').forEach(p => p.style.display = 'none');
+                panel.style.display = 'block';
+            }
+        }
+
+        async function initAudio() {
+            if (audioContext) return;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                const source = audioContext.createMediaStreamSource(stream);
+                source.connect(analyser);
+                dataArray = new Float32Array(analyser.fftSize);
+            } catch (err) {
+                alert("マイクの許可が得られませんでした。");
+                console.error(err);
+            }
+        }
+
+        // --- 問題システム：クイズ全体の初期化 ---
+        function initQuiz(level) {
+            currentLevel = level;
+            currentQuestionNo = 1;
+            totalScore = 0;
+            nextPage('game-page');
+            makeQuestion();
+        }
+
+        // 1問作成する関数
+        function makeQuestion() {
+            lastCentsDiff = 999; // リセット
+            document.getElementById('progress').innerHTML = `<i class="ti ti-bolt"></i> 問題 ${currentQuestionNo} / 10`;
+            document.getElementById('live-status').innerText = "「基準音をきく」ボタンを押してね";
+            document.getElementById('pointer').style.left = "50%";
+
+            // 実音B♭の前後数半音（例:-2〜+5半音）の範囲でランダムに基準音を選択
+            const randomOffsetIndex = Math.floor(Math.random() * 8); // 0〜7
+            const semitoneOffsetFromBf = NOTE_SEMITONES[randomOffsetIndex + 2]; // 少し範囲を絞る (-1〜+6等)
+            const refNoteName = NOTE_NAMES[randomOffsetIndex + 2];
+
+            // 基準音の周波数を計算
+            currentRefFreq = baseBfFreq * Math.pow(2, semitoneOffsetFromBf / 12);
+            document.getElementById('ref-sound-text').innerHTML = `基準音: <strong>${refNoteName}</strong> (${currentRefFreq.toFixed(1)} Hz)`;
+
+            // レベルに応じて「ねらう音」のターゲット周波数を設定
+            if (currentLevel === 1) {
+                // ユニゾン
+                currentTargetFreq = currentRefFreq;
+                document.getElementById('target-sound-text').innerHTML = `ねらう音: <strong>${refNoteName}</strong> <span style="font-size:13px;color:#8a7e7d;">(同じ高さ)</span>`;
+                document.getElementById('meter-caption').innerText = '基準音とぴったり同じ高さを狙おう！';
+            } 
+            else if (currentLevel === 2) {
+                // パワーコード（5度上[+7半音] か 4度下[-5半音] をランダムに）
+                const isFiveUp = Math.random() >= 0.5;
+                if (isFiveUp) {
+                    currentTargetFreq = currentRefFreq * Math.pow(2, 7 / 12);
+                    document.getElementById('target-sound-text').innerHTML = `ねらう音: <strong>基準音の5度上</strong>`;
+                } else {
+                    currentTargetFreq = currentRefFreq * Math.pow(2, -5 / 12);
+                    document.getElementById('target-sound-text').innerHTML = `ねらう音: <strong>基準音の4度下</strong>`;
+                }
+                document.getElementById('meter-caption').innerText = 'ハーモニーの骨組み（5度/4度）を感じてハモらせよう！';
+            } 
+            else if (currentLevel === 3) {
+                // 純正律長3度（+4半音上、ただし★平均律より13.7¢低い音を真のターゲットとする）
+                const standardThirdFreq = currentRefFreq * Math.pow(2, 4 / 12); // 平均律の長3度
+                // 13.7セント低く補正する公式: F_pure = F_equal * 2^(-13.7/1200)
+                currentTargetFreq = standardThirdFreq * Math.pow(2, -13.7 / 1200);
+                
+                document.getElementById('target-sound-text').innerHTML = `ねらう音: <strong>長3度上の音</strong> <span style="font-size:13px;color:#ff527b;">★純正律モード</span>`;
+                document.getElementById('meter-caption').innerText = '【自動補正】真ん中(0¢)を狙えば自動的に-13.7¢低い純正律になります！';
+            }
+
+            // 最後に「次の問題へ」のボタンテキストを調整
+            if (currentQuestionNo === 10) {
+                document.getElementById('next-question-btn').innerHTML = `結果をみる <i class="ti ti-trophy"></i>`;
+            } else {
+                document.getElementById('next-question-btn').innerHTML = `決定して次へ <i class="ti ti-arrow-right"></i>`;
+            }
+        }
+
+        // --- 基準音再生関数（低音響対策＆鋸歯状波仕様） ---
+        function playRef() {
+            if (!audioContext || isPlayingRef) return;
+            isPlayingRef = true;
+            document.getElementById('mic-status-title').innerText = "基準音再生中...";
+            document.getElementById('live-status').innerText = "じっくり聴いてね...";
+
+            // オシレーターと音量調節(Gain)を作成
+            const osc = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            // スマホスピーカーでも倍音がハッキリ聞こえる「鋸歯状波(sawtooth)」に設定
+            osc.type = 'sawtooth';
+            osc.frequency.value = currentRefFreq;
+
+            // 低音ほど聞き取りにくい耳の特性に合わせたボリューム出し分け
+            let volume = 0.08; // 通常(300Hz以上)
+            if (currentRefFreq < 150) {
+                volume = 0.18; // ④チューバなど超低音は大きく
+            } else if (currentRefFreq < 300) {
+                volume = 0.13; // ③トロンボーンなどの中低音
+            }
+            
+            // 2.5秒後に滑らかに消える(フェードアウト)設定
+            const now = audioContext.currentTime;
+            gainNode.gain.setValueAtTime(volume, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 2.5); // 2.5秒かけて消える
+
+            osc.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            osc.start(now);
+            osc.stop(now + 2.5);
+
+            // 再生が終わったらマイク入力待ちに切り替える
+            setTimeout(() => {
+                isPlayingRef = false;
+                document.getElementById('mic-status-title').innerText = "さあ、吹いてみよう！";
+                document.getElementById('live-status').innerText = "声をだすか、楽器を吹いてね";
+                
+                // ピッチ検出ループを回す
+                if (!isPitchLoopRunning) {
+                    isPitchLoopRunning = true;
+                    requestAnimationFrame(updatePitchLoop);
+                }
+            }, 2500);
+        }
+
+        // 1問ごとのスコア判定と次の問題への遷移
+        function evaluateAndNext() {
+            // スコア計算：今回の問題の得点を算出（1問につき最大10点とする）
+            let questionScore = 0;
+            if (lastCentsDiff === 999) {
+                // 音が検知されなかった場合は0点
+                questionScore = 0;
+            } else {
+                const absDiff = Math.abs(lastCentsDiff);
+                if (absDiff <= 2.0) questionScore = 10;       // ほぼ完ぺき
+                else if (absDiff <= 5.0) questionScore = 9;   // 優秀
+                else if (absDiff <= 10.0) questionScore = 7;  // Good
+                else if (absDiff <= 20.0) questionScore = 4;  // あとすこし
+                else if (absDiff <= 40.0) questionScore = 2;
+                else questionScore = 0;
+            }
+
+            totalScore += questionScore;
+
+            if (currentQuestionNo < 10) {
+                currentQuestionNo++;
+                makeQuestion();
+            } else {
+                // 10問終わったらリザルト画面へ
+                isPitchLoopRunning = false;
+                showResult();
+            }
+        }
+
+        // リザルト画面の表示
+        function showResult() {
+            nextPage('result-page');
+            const name = document.getElementById('user-name').value || '部員';
+            document.getElementById('result-username').innerText = `${name} さんの今回のピッチスコア`;
+            
+            // 1問10点×10問＝100点満点に換算
+            document.getElementById('final-score').innerText = `${totalScore}点`;
+
+            // コメントの出し分け
+            const comment = document.getElementById('result-comment');
+            if (totalScore >= 90) {
+                comment.innerText = "神ピッチです！合奏のコア（中心）になれる素晴らしい耳を持っています！";
+            } else if (totalScore >= 70) {
+                comment.innerText = "素晴らしいピッチ感です！周りの音とすぐに溶け込める実力があります！";
+            } else if (totalScore >= 40) {
+                comment.innerText = "安定してきましたね！ロングトーンの時にお腹の支えをもっと意識してみよう！";
+            } else {
+                comment.innerText = "まずは基準音をよーく聴くことから始めよう！毎日やれば必ず耳は良くなるよ！";
+            }
+        }
+
+        // リアルタイムピッチ検出ループ
+        function updatePitchLoop() {
+            if (!isPitchLoopRunning) return;
+            if (isPlayingRef) { 
+                // 基準音が鳴っている最中はマイク解析を一時スキップ
+                requestAnimationFrame(updatePitchLoop);
+                return; 
+            }
+
+            if (analyser && dataArray) {
+                analyser.getFloatTimeDomainData(dataArray);
+                const sampleRate = audioContext.sampleRate;
+                const freq = autoCorrelate(dataArray, sampleRate);
+
+                const pointer = document.getElementById('pointer');
+                const liveStatus = document.getElementById('live-status');
+
+                if (freq === -1) {
+                    liveStatus.innerText = "ーーー";
+                    pointer.style.left = "50%";
+                } else {
+                    // セント（cents）の計算
+                    let cents = 1200 * Math.log2(freq / currentTargetFreq);
+                    
+                    // スコア判定用に、最新のズレをグローバル変数に保存
+                    lastCentsDiff = cents;
+
+                    // メーターの左右表示（-50¢ 〜 +50¢ を 0% 〜 100% へ）
+                    let percentage = ((cents + 50) / 100) * 100;
+                    if (percentage < 0) percentage = 0;
+                    if (percentage > 100) percentage = 100;
+
+                    pointer.style.left = `${percentage}%`;
+
+                    let sign = cents >= 0 ? "+" : "";
+                    liveStatus.innerHTML = `${freq.toFixed(1)} Hz (${sign}${cents.toFixed(1)} ¢)`;
+                }
+            }
+            requestAnimationFrame(updatePitchLoop);
+        }
+
+        // 自己相関法アルゴリズム
+        function autoCorrelate(buffer, sampleRate) {
+            let size = buffer.length;
+            let rms = 0;
+            for (let i = 0; i < size; i++) {
+                let val = buffer[i];
+                rms += val * val;
+            }
+            rms = Math.sqrt(rms / size);
+            if (rms < 0.01) return -1; 
+
+            let r1 = 0, r2 = size - 1, thres = 0.2;
+            for (let i = 0; i < size / 2; i++) {
+                if (Math.abs(buffer[i]) < thres) { r1 = i; break; }
+            }
+            for (let i = size - 1; i >= size / 2; i--) {
+                if (Math.abs(buffer[i]) < thres) { r2 = i; break; }
+            }
+            buffer = buffer.slice(r1, r2);
+            size = buffer.length;
+
+            let c = new Float32Array(size);
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size - i; j++) {
+                    c[i] = c[i] + buffer[j] * buffer[j + i];
+                }
+            }
+
+            let d = 0;
+            while (c[d] > c[d + 1]) d++;
+            let maxval = -1, maxpos = -1;
+            for (let i = d; i < size; i++) {
+                if (c[i] > maxval) {
+                    maxval = c[i];
+                    maxpos = i;
+                }
+            }
+            let T0 = maxpos;
+
+            let x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+            let a = (x1 + x3 - 2 * x2) / 2;
+            let b = (x3 - x1) / 2;
+            if (a) T0 = T0 - b / (2 * a);
+
+            return sampleRate / T0;
+        }
+    </script>
+
+</body>
+</html>
