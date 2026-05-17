@@ -493,22 +493,39 @@ function passQuestion() {
 function playRef(f) {
   stopRef();
 
-  refOsc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
+  // オシレーター2本で厚みを出す
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
 
-  refOsc.type = 'square';
-  refOsc.frequency.value = f;
+  const gainNode = audioCtx.createGain();
 
-  let v = f < 150 ? 0.45 : f < 300 ? 0.35 : 0.25;
+  osc1.type = 'square';
+  osc2.type = 'triangle';
 
-  g.gain.setValueAtTime(0, audioCtx.currentTime);
-  g.gain.linearRampToValueAtTime(v, audioCtx.currentTime + 0.05);
-  g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.5);
+  osc1.frequency.value = f;
+  osc2.frequency.value = f * 0.998; // 少しずらして厚み
 
-  refOsc.connect(g).connect(audioCtx.destination);
-  refOsc.start();
-}
-  
+  // ← ここが全体音量
+  gainNode.gain.value = 0.8;
+
+  osc1.connect(gainNode);
+  osc2.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  osc1.start();
+  osc2.start();
+
+  refOsc = {
+    stop: () => {
+      osc1.stop();
+      osc2.stop();
+    }
+  };
+
+  // フェードアウト
+  gainNode.gain.setValueAtTime(0.7, audioCtx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.5);
+}  
 function stopRef() { if (refOsc) { try{refOsc.stop();}catch(e){} refOsc = null; } }
   
 // ─── DATA TRANSMISSION (GAS) ─────────────────────────────
