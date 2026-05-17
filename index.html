@@ -11,7 +11,7 @@
     :root {
       /* ピンクを基調としたカラーパレット */
       --primary: #ff66aa; /* パステルピンク */
-      --secondary: #ff007f; /* 蛍光ピンク（マゼンタ） */
+      --secondary: #ff007f; /* 蛍光ピンク */
       --accent: #ff007f;
       --success: #2ed573;
       --perfect: #ff007f;
@@ -20,7 +20,7 @@
       --card: rgba(255, 255, 255, 0.95);
       --text: #4a4a4a;
       --muted: #8e8e8e;
-      --radius: 32px; /* 角の丸み */
+      --radius: 32px; /* 全パーツ共通：角の大きな丸み */
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,9 +36,49 @@
       align-items: center;
       justify-content: flex-start;
       padding: 16px;
+      overflow-x: hidden;
+      position: relative;
     }
 
-    .screen { display: none; width: 100%; max-width: 460px; animation: fadeIn 0.4s ease; }
+    /* 音符が降る背景コンテナ */
+    #notes-container {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; /* クリックを邪魔しない */
+      z-index: 0;
+      overflow: hidden;
+      display: none; /* メニュー画面の時だけJSで表示 */
+    }
+
+    /* 降る音符のスタイル */
+    .falling-note {
+      position: absolute;
+      color: rgba(255, 255, 255, 0.65);
+      font-weight: bold;
+      line-height: 1;
+      text-shadow: 0 0 6px rgba(255, 0, 127, 0.2);
+      animation: fallAnimation linear forwards;
+    }
+
+    @keyframes fallAnimation {
+      0% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        /* 右上から左下へ流れるように移動 */
+        transform: translate(-150px, 105vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    .screen { display: none; width: 100%; max-width: 460px; animation: fadeIn 0.4s ease; position: relative; z-index: 1; }
     .screen.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
@@ -86,6 +126,11 @@
       background: transparent; color: var(--secondary);
       border: 3px solid var(--secondary); box-shadow: none;
       font-size: 14px; margin-top: 14px; padding: 14px; font-weight: 900;
+    }
+
+    .btn-back {
+      background: linear-gradient(135deg, #747d8c, #57606f);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1); font-size: 14px; margin-top: 10px;
     }
 
     .btn-pass {
@@ -155,6 +200,8 @@
   </style>
 </head>
 <body>
+
+<div id="notes-container"></div>
 
 <div id="screen-login" class="screen active">
   <div class="card">
@@ -253,17 +300,17 @@
   <button class="btn" onclick="location.reload()">もういちど練習する 🔁</button>
 </div>
 
-<div class="combo-toast" id="combo-toast"></div>
-
 <script>
-// ⚠️ GAS URLを設定してください
+// 🚀 ご指定いただいた最新のGASのWebアプリURLが設定されています
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx1WFxsM1_fJZIdnWWQ1UmiLUmtx8Nl39ziPVmSjhFwVZplTYlEJh0K6wUpN30RXOg/exec";
 
+// ─── STATE ───────────────────────────────────────────────
 let audioCtx, micStream, analyst, source, refOsc, rafId;
 let currentLevel = 1, qNum = 0, totalScore = 0, combo = 0;
 let refFreq, targetFreq, startTime, userName = "";
 let excelCount = 0, greatCount = 0, goodCount = 0, almostCount = 0;
 let resultLog = [], lastDetectedCents = null;
+let noteIntervalId = null; // 音符生成タイマーID
 
 const baseBflats = { "1": 932.33, "2": 466.16, "3": 233.08, "4": 116.54 };
 const levelPurposes = { 
@@ -275,11 +322,20 @@ const levelPurposes = {
 window.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('pitch_trainer_user_name');
   if (saved) document.getElementById('user-name').value = saved;
+  startFallingNotes(); // アプリ起動時に音符アニメーションを開始
 });
 
+// ─── SCREEN TRANSITIONS ─────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+
+  // メニュー画面、ログイン画面、履歴画面の時は音符を降らせる
+  if (id === 'screen-menu' || id === 'screen-login' || id === 'screen-history') {
+    startFallingNotes();
+  } else {
+    stopFallingNotes(); // ゲーム中や結果画面では演奏に集中するためストップ
+  }
 }
 
 function goToMenu() {
@@ -289,6 +345,50 @@ function goToMenu() {
   showScreen('screen-menu');
 }
 
+// ─── FALLING NOTES ANIMATION (右上から降る機能) ───────
+function startFallingNotes() {
+  const container = document.getElementById('notes-container');
+  container.style.display = 'block';
+  if (noteIntervalId) return;
+
+  const notesList = ['♩', '♪', '♫', '♬', '𝄢', '𝄞', '♭', '♯'];
+  
+  noteIntervalId = setInterval(() => {
+    const note = document.createElement('div');
+    note.className = 'falling-note';
+    note.textContent = notesList[Math.floor(Math.random() * notesList.length)];
+    
+    // 画面の右上付近からスタート（横幅の60%〜110%の間）
+    const startX = (window.innerWidth * 0.6) + (Math.random() * (window.innerWidth * 0.5));
+    note.style.left = startX + 'px';
+    note.style.top = '-40px';
+    
+    // ランダムな大きさ (16px 〜 36px)
+    const size = 16 + Math.random() * 20;
+    note.style.fontSize = size + 'px';
+    
+    // ランダムなアニメーション速度 (4秒 〜 8秒)
+    const duration = 4 + Math.random() * 4;
+    note.style.animationDuration = duration + 's';
+    
+    container.appendChild(note);
+    
+    // 画面外に消えたら要素を削除
+    setTimeout(() => {
+      note.remove();
+    }, duration * 1000);
+  }, 400); // 0.4秒ごとに新しい音符を降らせる
+}
+
+function stopFallingNotes() {
+  const container = document.getElementById('notes-container');
+  container.style.display = 'none';
+  clearInterval(noteIntervalId);
+  noteIntervalId = null;
+  container.innerHTML = ''; // 画面に残っている音符を一掃
+}
+
+// ─── START GAME ──────────────────────────────────────────
 async function startGame(lv) {
   currentLevel = lv; qNum = 0; totalScore = 0; combo = 0;
   excelCount = 0; greatCount = 0; goodCount = 0; almostCount = 0; resultLog = [];
@@ -301,10 +401,11 @@ async function startGame(lv) {
     analyst.fftSize = 2048;
     source = audioCtx.createMediaStreamSource(micStream);
     source.connect(analyst);
-  } catch(e) { alert("マイクが使えません。HTTPSで接続してください。"); showScreen('screen-menu'); return; }
+  } catch(e) { alert("マイクが使えません。ブラウザのマイク許可を確認してください。"); showScreen('screen-menu'); return; }
   nextQuestion();
 }
 
+// ─── QUESTION CYCLE ──────────────────────────────────────
 function nextQuestion() {
   if (qNum >= 10) return endGame();
   qNum++;
@@ -319,7 +420,7 @@ function nextQuestion() {
   
   if (currentLevel === 1) targetFreq = refFreq;
   else if (currentLevel === 2) targetFreq = refFreq * Math.pow(2, (Math.random() > 0.5 ? 7 : -5) / 12);
-  else targetFreq = refFreq * 1.25 * Math.pow(2, -13.7/1200); // 3度は純正律補正
+  else targetFreq = refFreq * 1.25 * Math.pow(2, -13.7/1200); // 純正律3度のピタゴラス補正
 
   document.getElementById('ref-note').textContent = freqToNote(refFreq);
   document.getElementById('target-note').textContent = freqToNote(targetFreq);
@@ -332,10 +433,11 @@ function nextQuestion() {
     document.getElementById('countdown-wrap').classList.add('show');
     startTime = Date.now();
     pitchLoop();
-    setTimeout(evaluateFinal, 5000);
+    setTimeout(evaluateFinal, 5000); // 5秒後に判定を一発で行うロングトーン仕様
   }, 2800);
 }
 
+// ─── PITCH DETECTION LOOP ────────────────────────────────
 function pitchLoop() {
   const elapsed = Date.now() - startTime;
   const remaining = Math.max(0, 5000 - elapsed);
@@ -362,6 +464,7 @@ function updateUI(diff) {
   document.getElementById('pointer').style.left = Math.max(0, Math.min(100, 50 + diff)) + '%';
 }
 
+// ─── EVALUATION ──────────────────────────────────────────
 function evaluateFinal() {
   cancelAnimationFrame(rafId);
   const finalCents = lastDetectedCents !== null ? lastDetectedCents : 999;
@@ -385,6 +488,7 @@ function passQuestion() {
   nextQuestion();
 }
 
+// ─── AUDIO REFERENCE SOURCE ──────────────────────────────
 function playRef(f) {
   stopRef(); refOsc = audioCtx.createOscillator(); const g = audioCtx.createGain();
   refOsc.type = 'sawtooth'; refOsc.frequency.value = f;
@@ -395,11 +499,25 @@ function playRef(f) {
 }
 function stopRef() { if (refOsc) { try{refOsc.stop();}catch(e){} refOsc = null; } }
 
+// ─── DATA TRANSMISSION (GAS) ─────────────────────────────
 function sendToGAS(qn, res, diff, pts) {
   if (!GAS_URL) return;
-  fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ userName, instrument: document.getElementById('user-inst').value, qNum: qn, result: res, diff, score: pts, level: currentLevel }) });
+  fetch(GAS_URL, { 
+    method: "POST", 
+    mode: "no-cors", 
+    body: JSON.stringify({ 
+      userName, 
+      instrument: document.getElementById('user-inst').value, 
+      qNum: qn, 
+      result: res, 
+      diff: diff === 999 ? "--" : diff.toFixed(1), 
+      score: pts, 
+      level: currentLevel 
+    }) 
+  });
 }
 
+// ─── END GAME / DISPLAY RESULTS ─────────────────────────
 function endGame() {
   showScreen('screen-result');
   document.getElementById('result-score').textContent = totalScore + "点";
@@ -415,6 +533,7 @@ function endGame() {
   localStorage.setItem('pitch_trainer_history_v2', JSON.stringify(history));
 }
 
+// ─── LOCAL STORAGE HISTORY ───────────────────────────────
 function showHistoryScreen() {
   showScreen('screen-history');
   const cnt = document.getElementById('history-container'); cnt.innerHTML = "";
@@ -429,6 +548,7 @@ function clearAllHistory() { if(confirm("履歴をすべて消しますか？"))
 
 function setPhase(m, c) { const el = document.getElementById('phase-msg'); el.textContent = m; }
 
+// ─── AUTO CORRELATION PITCH DETECTOR ─────────────────────
 function autoCorrelate(buf, sr) {
   let rms = 0; for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
   if (Math.sqrt(rms / buf.length) < 0.01) return -1;
