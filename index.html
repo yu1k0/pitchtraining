@@ -491,15 +491,26 @@ function passQuestion() {
 
 // ─── AUDIO REFERENCE SOURCE ──────────────────────────────
 function playRef(f) {
-  stopRef(); refOsc = audioCtx.createOscillator(); const g = audioCtx.createGain();
-  refOsc.type = 'sawtooth'; refOsc.frequency.value = f;
-  let v = f < 150 ? 0.18 : f < 300 ? 0.12 : 0.08;
-  g.gain.setValueAtTime(0, audioCtx.currentTime); g.gain.linearRampToValueAtTime(v, audioCtx.currentTime + 0.1);
-  g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.5);
-  refOsc.connect(g).connect(audioCtx.destination); refOsc.start();
-}
-function stopRef() { if (refOsc) { try{refOsc.stop();}catch(e){} refOsc = null; } }
+  stopRef();
 
+  refOsc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+
+  refOsc.type = 'square';
+  refOsc.frequency.value = f;
+
+  let v = f < 150 ? 0.45 : f < 300 ? 0.35 : 0.25;
+
+  g.gain.setValueAtTime(0, audioCtx.currentTime);
+  g.gain.linearRampToValueAtTime(v, audioCtx.currentTime + 0.05);
+  g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.5);
+
+  refOsc.connect(g).connect(audioCtx.destination);
+  refOsc.start();
+}
+  
+function stopRef() { if (refOsc) { try{refOsc.stop();}catch(e){} refOsc = null; } }
+  
 // ─── DATA TRANSMISSION (GAS) ─────────────────────────────
 function sendToGAS(qn, res, diff, pts) {
   if (!GAS_URL) return;
