@@ -3,1112 +3,379 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>pitch training！</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<title>ピッチ判定アプリ</title>
 
 <style>
-
 body{
-    margin:0;
-    padding:16px;
-    min-height:100vh;
-
+    font-family: sans-serif;
+    background:#f3f6ff;
     display:flex;
     justify-content:center;
     align-items:center;
-
-    font-family:'Zen Maru Gothic',sans-serif;
-
-    background:
-    linear-gradient(
-        135deg,
-        #ffd6e7 0%,
-        #cffff5 100%
-    );
-
-    background-attachment:fixed;
+    min-height:100vh;
+    margin:0;
 }
 
-.app-container{
-
-    width:100%;
-    max-width:440px;
-
-    background:
-    rgba(255,255,255,0.92);
-
-    border-radius:28px;
-
-    padding:24px;
-
-    box-sizing:border-box;
-
-    backdrop-filter:blur(10px);
-
-    border:2px solid rgba(255,255,255,0.7);
-
-    box-shadow:
-    0 10px 30px rgba(255,120,150,0.25);
-
+.card{
+    width:90%;
+    max-width:420px;
+    background:white;
+    border-radius:24px;
+    padding:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.1);
     text-align:center;
 }
 
 h1{
-
     margin-top:0;
-
-    color:#ff5f8f;
-
-    font-size:28px;
-
-    font-weight:900;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:6px;
+    color:#2c3e6b;
 }
 
-h2{
-
-    color:#ff7597;
-
-    font-size:20px;
-
-    font-weight:700;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:6px;
-}
-
-input,
-select{
-
-    width:100%;
-
-    padding:14px;
-
-    border-radius:24px;
-
-    border:2px solid #ffe1ea;
-
-    font-size:16px;
-
-    margin-top:8px;
-    margin-bottom:18px;
-
-    box-sizing:border-box;
-
-    font-family:inherit;
-
-    outline:none;
-}
-
-input:focus,
-select:focus{
-
-    border-color:#ff8dad;
-}
-
-button{
-
-    width:100%;
-
-    padding:14px;
-
-    border:none;
-
-    border-radius:24px;
-
-    background:
-    linear-gradient(
-        135deg,
-        #ff6f97,
-        #ff8fb0
-    );
-
-    color:white;
-
-    font-size:16px;
-
-    font-weight:700;
-
-    font-family:inherit;
-
-    cursor:pointer;
-
-    margin-top:8px;
-    margin-bottom:12px;
-
-    transition:
-    transform 0.1s,
-    box-shadow 0.1s;
-
-    box-shadow:
-    0 4px 14px rgba(255,100,150,0.25);
-}
-
-button:active{
-
-    transform:scale(0.97);
-}
-
-.page{
-    display:none;
-}
-
-#login-page{
-    display:block;
-}
-
-.welcome-box{
-
-    background:#fff5f8;
-
-    padding:14px;
-
-    border-radius:24px;
-
-    margin-bottom:20px;
-
-    border:1px dashed #ffbfd1;
-}
-
-.game-info{
-
-    display:inline-block;
-
-    padding:5px 12px;
-
-    border-radius:999px;
-
-    background:#f1f1f1;
-
-    font-size:13px;
-
-    margin-bottom:16px;
-}
-
-.sound-box{
-
-    background:#fff9fa;
-
-    border:2px dashed #ffbfd1;
-
-    border-radius:24px;
-
-    padding:16px;
-
-    margin-bottom:20px;
-}
-
-.sound-line{
-
-    font-size:18px;
-
+.note{
+    font-size:56px;
+    font-weight:bold;
+    color:#2c3e6b;
     margin:10px 0;
 }
 
-.sound-line strong{
-
-    color:#ff4f82;
-
-    font-size:22px;
+.status{
+    font-size:20px;
+    margin:20px 0;
+    min-height:30px;
 }
 
-.meter-container{
+.result{
+    font-size:42px;
+    font-weight:bold;
+    margin:20px 0 10px;
+}
 
+.detail{
+    font-size:18px;
+    color:#666;
+}
+
+button{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:16px;
+    background:#4ecdc4;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:20px;
+}
+
+button:disabled{
+    opacity:0.5;
+}
+
+.gauge{
+    width:100%;
+    height:24px;
+    background:#ddd;
+    border-radius:12px;
+    margin-top:25px;
     position:relative;
-
-    height:36px;
-
-    border-radius:24px;
-
-    margin:24px 0 12px 0;
-
-    background:
-    linear-gradient(
-        to right,
-        #ffb7c5 0%,
-        #ffe3b5 30%,
-        #bfffd0 50%,
-        #ffe3b5 70%,
-        #ffb7c5 100%
-    );
-
-    border:2px solid #e8e8e8;
-
     overflow:hidden;
 }
 
-.meter-center{
-
+.center-line{
     position:absolute;
-
     left:50%;
-
     top:0;
-
-    width:3px;
-
-    height:100%;
-
-    background:#ff365f;
-}
-
-.meter-pointer{
-
-    position:absolute;
-
-    top:-6px;
-
-    left:50%;
-
     width:4px;
-
-    height:48px;
-
-    background:#403535;
-
-    border-radius:2px;
-
+    height:100%;
+    background:#222;
     transform:translateX(-50%);
-
-    transition:left 0.08s ease;
 }
 
-.live-status{
-
-    min-height:42px;
-
-    color:#ff4f82;
-
-    font-size:16px;
-
-    font-weight:700;
+.pointer{
+    position:absolute;
+    top:0;
+    width:6px;
+    height:100%;
+    background:#ff4757;
+    left:50%;
+    transform:translateX(-50%);
+    transition:left 0.1s linear;
 }
-
-.score-circle{
-
-    width:150px;
-    height:150px;
-
-    margin:20px auto;
-
-    border-radius:50%;
-
-    background:
-    linear-gradient(
-        135deg,
-        #fff5f7,
-        #ffe1ea
-    );
-
-    border:4px solid #ff7096;
-
-    line-height:142px;
-
-    font-size:46px;
-
-    font-weight:900;
-
-    color:#ff4560;
-}
-
-@keyframes fadeCombo{
-
-    0%{
-        opacity:0;
-        transform:
-        translateX(-50%)
-        translateY(-10px);
-    }
-
-    20%{
-        opacity:1;
-        transform:
-        translateX(-50%)
-        translateY(0px);
-    }
-
-    80%{
-        opacity:1;
-    }
-
-    100%{
-        opacity:0;
-        transform:
-        translateX(-50%)
-        translateY(-15px);
-    }
-}
-
 </style>
 </head>
 
 <body>
 
-<div class="app-container">
+<div class="card">
 
-<h1>
-<i class="ti ti-music"></i>
-pitch training！
-</h1>
+    <h1>🎵 ピッチ判定</h1>
 
-<!-- ログイン -->
+    <div class="note" id="targetNote">A4</div>
 
-<div id="login-page" class="page">
+    <div class="status" id="status">
+        ボタンを押してください
+    </div>
 
-<h2>
-<i class="ti ti-user-check"></i>
-ログイン
-</h2>
+    <div class="result" id="result">--</div>
+    <div class="detail" id="detail"></div>
 
-<input
-type="text"
-id="user-name"
-placeholder="名前を入力">
+    <div class="gauge">
+        <div class="center-line"></div>
+        <div class="pointer" id="pointer"></div>
+    </div>
 
-<select id="instrument">
-
-<option value="466.16">高音楽器</option>
-<option value="233.08">中低音楽器</option>
-<option value="116.54">低音楽器</option>
-
-</select>
-
-<button onclick="clickLogin()">
-メニューへ
-</button>
-
-</div>
-
-<!-- メニュー -->
-
-<div id="menu-page" class="page">
-
-<h2>
-<i class="ti ti-list"></i>
-トレーニングメニュー
-</h2>
-
-<div id="welcome-message" class="welcome-box"></div>
-
-<button onclick="initQuiz(1)">
-Lv1 ユニゾン
-</button>
-
-<button onclick="initQuiz(2)">
-Lv2 パワーコード
-</button>
-
-<button onclick="initQuiz(3)">
-Lv3 純正律長3度
-</button>
-
-</div>
-
-<!-- ゲーム -->
-
-<div id="game-page" class="page">
-
-<div id="progress" class="game-info">
-1 / 10
-</div>
-
-<h2>
-<i class="ti ti-device-audio-tape"></i>
-音を合わせよう！
-</h2>
-
-<div class="sound-box">
-
-<div id="ref-sound-text" class="sound-line">
-基準音: ---
-</div>
-
-<div id="target-sound-text" class="sound-line">
-ねらう音: ---
-</div>
-
-</div>
-
-<button
-onclick="playRef()"
-style="
-background:
-linear-gradient(
-135deg,
-#20b2aa,
-#3cb371
-);
-">
-
-<i class="ti ti-volume"></i>
-基準音をきく
-
-</button>
-
-<div class="meter-container">
-
-<div class="meter-center"></div>
-
-<div
-id="pointer"
-class="meter-pointer">
-</div>
-
-</div>
-
-<div id="live-status" class="live-status">
-ーーー
-</div>
-
-<button
-onclick="evaluateAndNext()"
-style="
-background:
-linear-gradient(
-135deg,
-#ff9800,
-#ff5722
-);
-">
-
-決定して次へ
-
-</button>
-
-</div>
-
-<!-- 結果 -->
-
-<div id="result-page" class="page">
-
-<h2>
-<i class="ti ti-trophy"></i>
-結果
-</h2>
-
-<p id="result-username"></p>
-
-<div id="final-score" class="score-circle">
-0点
-</div>
-
-<p id="result-comment"></p>
-
-<button onclick="nextPage('menu-page')">
-
-もう一度
-
-</button>
-
-</div>
+    <button id="startBtn">スタート</button>
 
 </div>
 
 <script>
 
-let audioContext = null;
+const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 
-let analyser = null;
+let audioCtx;
+let analyser;
+let micStream;
 
-let dataArray = null;
+const targetFreq = 440;
+const targetNote = "A4";
 
-let isPitchLoopRunning = false;
+document.getElementById("targetNote").textContent = targetNote;
 
-let currentLevel = 1;
+const startBtn = document.getElementById("startBtn");
 
-let currentQuestionNo = 1;
+startBtn.addEventListener("click", start);
 
-let totalScore = 0;
+async function start(){
 
-let currentRefFreq = 466.16;
+    startBtn.disabled = true;
 
-let currentTargetFreq = 466.16;
+    document.getElementById("result").textContent = "--";
+    document.getElementById("detail").textContent = "";
 
-let lastCentsDiff = 999;
+    try{
 
-let smoothedCents = 0;
+        micStream = await navigator.mediaDevices.getUserMedia({
+            audio:true
+        });
 
-let comboCount = 0;
+        audioCtx = new AudioContextClass();
 
-const NOTES = [
-"C",
-"D",
-"E",
-"F",
-"G",
-"A",
-"B"
-];
+        const source = audioCtx.createMediaStreamSource(micStream);
 
-function nextPage(pageId){
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
 
-    document
-    .querySelectorAll('.page')
-    .forEach(page=>{
-        page.style.display='none';
-    });
+        source.connect(analyser);
 
-    document
-    .getElementById(pageId)
-    .style.display='block';
-}
+        await audioCtx.resume();
 
-async function initAudio(){
+        playReference();
 
-    if(audioContext){
+    }catch(e){
 
-        if(audioContext.state==="suspended"){
-            await audioContext.resume();
-        }
-
-        return;
-    }
-
-    const stream =
-    await navigator.mediaDevices
-    .getUserMedia({
-        audio:true
-    });
-
-    audioContext =
-    new (
-        window.AudioContext
-        ||
-        window.webkitAudioContext
-    )();
-
-    analyser =
-    audioContext.createAnalyser();
-
-    analyser.fftSize = 2048;
-
-    const source =
-    audioContext
-    .createMediaStreamSource(stream);
-
-    source.connect(analyser);
-
-    dataArray =
-    new Float32Array(analyser.fftSize);
-}
-
-async function clickLogin(){
-
-    await initAudio();
-
-    const name =
-    document
-    .getElementById('user-name')
-    .value || '部員';
-
-    document
-    .getElementById('welcome-message')
-    .innerHTML =
-    `
-    こんにちは、
-    <strong>${name}</strong>
-    さん！
-    `;
-
-    nextPage('menu-page');
-}
-
-function initQuiz(level){
-
-    currentLevel = level;
-
-    currentQuestionNo = 1;
-
-    totalScore = 0;
-
-    nextPage('game-page');
-
-    makeQuestion();
-}
-
-function makeQuestion(){
-
-    smoothedCents = 0;
-
-    document
-    .getElementById('progress')
-    .innerText =
-    `${currentQuestionNo} / 10`;
-
-    const base =
-    parseFloat(
-        document
-        .getElementById('instrument')
-        .value
-    );
-
-    currentRefFreq =
-    base *
-    Math.pow(
-        2,
-        Math.floor(Math.random()*7)/12
-    );
-
-    const note =
-    NOTES[
-        Math.floor(Math.random()*NOTES.length)
-    ];
-
-    document
-    .getElementById('ref-sound-text')
-    .innerHTML =
-    `基準音:
-    <strong>${note}</strong>
-    (${currentRefFreq.toFixed(1)}Hz)`;
-
-    if(currentLevel===1){
-
-        currentTargetFreq =
-        currentRefFreq;
-
-        document
-        .getElementById('target-sound-text')
-        .innerHTML =
-        `
-        ねらう音:
-        <strong>同じ音</strong>
-        `;
-    }
-
-    if(currentLevel===2){
-
-        currentTargetFreq =
-        currentRefFreq
-        *
-        Math.pow(2,7/12);
-
-        document
-        .getElementById('target-sound-text')
-        .innerHTML =
-        `
-        ねらう音:
-        <strong>5度上</strong>
-        `;
-    }
-
-    if(currentLevel===3){
-
-        currentTargetFreq =
-        currentRefFreq
-        *
-        Math.pow(2,4/12)
-        *
-        Math.pow(2,-13.7/1200);
-
-        document
-        .getElementById('target-sound-text')
-        .innerHTML =
-        `
-        ねらう音:
-        <strong>純正律長3度</strong>
-        `;
+        alert("マイクが使用できません");
+        startBtn.disabled = false;
     }
 }
 
-async function playRef(){
+function playReference(){
 
-    await initAudio();
+    document.getElementById("status").textContent =
+        "🎵 基準音を3秒再生しています";
 
-    const osc =
-    audioContext.createOscillator();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
 
-    const gain =
-    audioContext.createGain();
-
-    osc.type = 'triangle';
-
-    osc.frequency.value =
-    currentRefFreq;
-
-    gain.gain.value = 0.1;
+    osc.type = "triangle";
+    osc.frequency.value = targetFreq;
 
     osc.connect(gain);
+    gain.connect(audioCtx.destination);
 
-    gain.connect(
-        audioContext.destination
-    );
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
 
     osc.start();
 
-    osc.stop(
-        audioContext.currentTime + 2.5
-    );
-
     setTimeout(()=>{
 
-        if(!isPitchLoopRunning){
+        osc.stop();
 
-            isPitchLoopRunning = true;
+        waitBeforeJudge();
 
-            requestAnimationFrame(
-                updatePitchLoop
-            );
+    },3000);
+}
+
+function waitBeforeJudge(){
+
+    let count = 5;
+
+    document.getElementById("status").textContent =
+        `🎤 ${count}秒後に判定します`;
+
+    const interval = setInterval(()=>{
+
+        count--;
+
+        if(count > 0){
+
+            document.getElementById("status").textContent =
+                `🎤 ${count}秒後に判定します`;
+
+        }else{
+
+            clearInterval(interval);
+
+            judgePitch();
         }
 
-    },2500);
+    },1000);
 }
 
-function updatePitchLoop(){
+function judgePitch(){
 
-    if(!isPitchLoopRunning) return;
+    document.getElementById("status").textContent =
+        "🎧 判定中...";
 
-    analyser.getFloatTimeDomainData(
-        dataArray
-    );
+    const buffer = new Float32Array(analyser.fftSize);
 
-    const freq =
-    autoCorrelate(
-        dataArray,
-        audioContext.sampleRate
-    );
+    analyser.getFloatTimeDomainData(buffer);
 
-    const pointer =
-    document
-    .getElementById('pointer');
+    const freq = autoCorrelate(buffer, audioCtx.sampleRate);
 
-    const live =
-    document
-    .getElementById('live-status');
+    if(freq === -1){
 
-    if(freq===-1){
+        document.getElementById("result").textContent =
+            "検知失敗";
 
-        live.innerText="ーーー";
+        document.getElementById("detail").textContent =
+            "音が小さい可能性があります";
 
-        pointer.style.left="50%";
-
-        lastCentsDiff=999;
+        startBtn.disabled = false;
+        return;
     }
 
-    else{
+    let cents = 1200 * Math.log2(freq / targetFreq);
 
-        let cents =
-        1200 *
-        Math.log2(
-            freq/currentTargetFreq
-        );
+    while(cents > 600) cents -= 1200;
+    while(cents < -600) cents += 1200;
 
-        smoothedCents =
-        smoothedCents*0.8
-        +
-        cents*0.2;
+    showResult(cents);
 
-        lastCentsDiff =
-        smoothedCents;
-
-        let percentage =
-        (
-            (smoothedCents+50)
-            /100
-        )*100;
-
-        percentage =
-        Math.max(
-            0,
-            Math.min(100,percentage)
-        );
-
-        pointer.style.left =
-        `${percentage}%`;
-
-        let sign =
-        smoothedCents>=0 ? "+" : "";
-
-        live.innerHTML =
-        `
-        ${freq.toFixed(1)}Hz
-        (${sign}${smoothedCents.toFixed(1)}¢)
-        `;
-    }
-
-    requestAnimationFrame(
-        updatePitchLoop
-    );
+    startBtn.disabled = false;
 }
 
-function autoCorrelate(buffer,sampleRate){
+function showResult(cents){
 
-    let size = buffer.length;
+    const abs = Math.abs(cents);
+
+    let rank = "";
+    let msg = "";
+
+    if(abs <= 5){
+
+        rank = "Excellent ✨";
+        msg = "かなり正確です";
+
+    }else if(abs <= 15){
+
+        rank = "Great 🎯";
+        msg = "よく合っています";
+
+    }else if(abs <= 30){
+
+        rank = "Good ⭕";
+        msg = "あと少し";
+
+    }else{
+
+        rank = "Almost 💦";
+        msg = "音程がずれています";
+    }
+
+    document.getElementById("status").textContent =
+        "判定完了";
+
+    document.getElementById("result").textContent =
+        rank;
+
+    document.getElementById("detail").textContent =
+        `${cents.toFixed(1)} ¢  ${msg}`;
+
+    updateGauge(cents);
+}
+
+function updateGauge(cents){
+
+    let pos = 50 + cents;
+
+    pos = Math.max(0, Math.min(100, pos));
+
+    document.getElementById("pointer").style.left =
+        pos + "%";
+}
+
+function autoCorrelate(buf, sampleRate){
+
+    let SIZE = buf.length;
 
     let rms = 0;
 
-    for(let i=0;i<size;i++){
-
-        rms += buffer[i]*buffer[i];
+    for(let i=0;i<SIZE;i++){
+        rms += buf[i] * buf[i];
     }
 
-    rms = Math.sqrt(rms/size);
+    rms = Math.sqrt(rms / SIZE);
 
-    if(rms<0.005) return -1;
+    if(rms < 0.01) return -1;
 
-    let bestOffset = -1;
+    let r1 = 0;
+    let r2 = SIZE - 1;
 
-    let bestCorrelation = 0;
-
-    let maxSamples = 1000;
-
-    for(let offset=8;offset<maxSamples;offset++){
-
-        let correlation = 0;
-
-        for(let i=0;i<maxSamples;i++){
-
-            correlation +=
-            buffer[i]
-            *
-            buffer[i+offset];
-        }
-
-        if(correlation>bestCorrelation){
-
-            bestCorrelation =
-            correlation;
-
-            bestOffset =
-            offset;
+    for(let i=0;i<SIZE/2;i++){
+        if(Math.abs(buf[i]) < 0.2){
+            r1 = i;
+            break;
         }
     }
 
-    if(bestOffset===-1)
-    return -1;
-
-    let freq =
-    sampleRate/bestOffset;
-
-    if(freq>40 && freq<2000){
-
-        return freq;
-    }
-
-    return -1;
-}
-
-function evaluateAndNext(){
-
-    let score = 0;
-
-    let text = "";
-
-    let sub = "";
-
-    const abs =
-    Math.abs(lastCentsDiff);
-
-    if(abs<=2){
-
-        score=10;
-
-        text="Excellent ✨";
-
-        sub="とても正確です！";
-
-        launchConfetti(140);
-
-        comboCount++;
-    }
-
-    else if(abs<=10){
-
-        score=7;
-
-        text="Great 🎯";
-
-        sub="正確です！";
-
-        launchConfetti(80);
-
-        comboCount++;
-    }
-
-    else if(abs<=50){
-
-        score=4;
-
-        text="Good ⭕";
-
-        sub="良好です！";
-
-        launchConfetti(40);
-
-        comboCount++;
-    }
-
-    else{
-
-        score=0;
-
-        text="Almost! 💦";
-
-        sub="あと少し！";
-
-        comboCount=0;
-    }
-
-    totalScore += score;
-
-    if(comboCount>=3){
-
-        showComboMessage(
-            `${comboCount}回連続！`
-        );
-    }
-
-    document
-    .getElementById('live-status')
-    .innerHTML =
-    `
-    <div style="
-    font-size:24px;
-    font-weight:900;
-    ">
-    ${text}
-    </div>
-
-    <div>
-    ${sub}
-    </div>
-    `;
-
-    setTimeout(()=>{
-
-        if(currentQuestionNo<10){
-
-            currentQuestionNo++;
-
-            makeQuestion();
+    for(let i=1;i<SIZE/2;i++){
+        if(Math.abs(buf[SIZE-i]) < 0.2){
+            r2 = SIZE - i;
+            break;
         }
+    }
 
-        else{
+    buf = buf.slice(r1, r2);
+    SIZE = buf.length;
 
-            showResult();
+    let c = new Array(SIZE).fill(0);
+
+    for(let i=0;i<SIZE;i++){
+        for(let j=0;j<SIZE-i;j++){
+            c[i] += buf[j] * buf[j+i];
         }
-
-    },1200);
-}
-
-function showResult(){
-
-    isPitchLoopRunning = false;
-
-    nextPage('result-page');
-
-    const name =
-    document
-    .getElementById('user-name')
-    .value || '部員';
-
-    document
-    .getElementById('result-username')
-    .innerText =
-    `${name}さんの結果`;
-
-    document
-    .getElementById('final-score')
-    .innerText =
-    `${totalScore}点`;
-
-    let comment = "";
-
-    if(totalScore>=90){
-
-        comment =
-        "神ピッチ！✨";
     }
 
-    else if(totalScore>=70){
+    let d = 0;
 
-        comment =
-        "かなり正確です！";
-    }
+    while(c[d] > c[d+1]) d++;
 
-    else if(totalScore>=40){
+    let maxval = -1;
+    let maxpos = -1;
 
-        comment =
-        "安定してきました！";
-    }
+    for(let i=d;i<SIZE;i++){
 
-    else{
+        if(c[i] > maxval){
 
-        comment =
-        "基準音をよく聴こう！";
-    }
-
-    document
-    .getElementById('result-comment')
-    .innerText =
-    comment;
-}
-
-function launchConfetti(count){
-
-    confetti({
-
-        particleCount:count,
-
-        spread:70,
-
-        origin:{
-            y:0.7
+            maxval = c[i];
+            maxpos = i;
         }
-    });
-}
+    }
 
-function showComboMessage(text){
+    let T0 = maxpos;
 
-    const combo =
-    document.createElement('div');
-
-    combo.innerText = text;
-
-    combo.style.position='fixed';
-
-    combo.style.top='30px';
-
-    combo.style.left='50%';
-
-    combo.style.transform=
-    'translateX(-50%)';
-
-    combo.style.background=
-    'linear-gradient(135deg,#ff9ac2,#ffd6e7)';
-
-    combo.style.color='white';
-
-    combo.style.padding='14px 22px';
-
-    combo.style.borderRadius='999px';
-
-    combo.style.fontWeight='700';
-
-    combo.style.zIndex='9999';
-
-    combo.style.animation=
-    'fadeCombo 2s ease forwards';
-
-    document.body.appendChild(combo);
-
-    setTimeout(()=>{
-        combo.remove();
-    },2000);
+    return sampleRate / T0;
 }
 
 </script>
