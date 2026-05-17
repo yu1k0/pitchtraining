@@ -57,10 +57,10 @@
       font-weight: bold;
       line-height: 1;
       text-shadow: 0 0 6px rgba(255, 0, 127, 0.2);
-      animation: fallAnimation linear forwards;
     }
 
-    @keyframes fallAnimation {
+    /* 右上から左下へ綺麗に流れるアニメーション設定 */
+    @keyframes diagonalFall {
       0% {
         transform: translate(0, 0) rotate(0deg);
         opacity: 0;
@@ -72,8 +72,8 @@
         opacity: 1;
       }
       100% {
-        /* 右上から左下へ流れるように移動 */
-        transform: translate(-150px, 105vh) rotate(360deg);
+        /* X軸をマイナス方向に大きく移動させて左下へ流す */
+        transform: translate(-80vw, 110vh) rotate(-360deg);
         opacity: 0;
       }
     }
@@ -301,7 +301,7 @@
 </div>
 
 <script>
-// 🚀 ご指定いただいた最新のGASのWebアプリURLが設定されています
+// 🚀 スプレッドシート連携用URL
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx1WFxsM1_fJZIdnWWQ1UmiLUmtx8Nl39ziPVmSjhFwVZplTYlEJh0K6wUpN30RXOg/exec";
 
 // ─── STATE ───────────────────────────────────────────────
@@ -310,7 +310,7 @@ let currentLevel = 1, qNum = 0, totalScore = 0, combo = 0;
 let refFreq, targetFreq, startTime, userName = "";
 let excelCount = 0, greatCount = 0, goodCount = 0, almostCount = 0;
 let resultLog = [], lastDetectedCents = null;
-let noteIntervalId = null; // 音符生成タイマーID
+let noteIntervalId = null; 
 
 const baseBflats = { "1": 932.33, "2": 466.16, "3": 233.08, "4": 116.54 };
 const levelPurposes = { 
@@ -322,7 +322,7 @@ const levelPurposes = {
 window.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('pitch_trainer_user_name');
   if (saved) document.getElementById('user-name').value = saved;
-  startFallingNotes(); // アプリ起動時に音符アニメーションを開始
+  startFallingNotes(); 
 });
 
 // ─── SCREEN TRANSITIONS ─────────────────────────────────
@@ -330,11 +330,10 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 
-  // メニュー画面、ログイン画面、履歴画面の時は音符を降らせる
   if (id === 'screen-menu' || id === 'screen-login' || id === 'screen-history') {
     startFallingNotes();
   } else {
-    stopFallingNotes(); // ゲーム中や結果画面では演奏に集中するためストップ
+    stopFallingNotes(); 
   }
 }
 
@@ -345,7 +344,7 @@ function goToMenu() {
   showScreen('screen-menu');
 }
 
-// ─── FALLING NOTES ANIMATION (右上から降る機能) ───────
+// ─── FALLING NOTES ANIMATION (右上から左下へ降る機能) ───────
 function startFallingNotes() {
   const container = document.getElementById('notes-container');
   container.style.display = 'block';
@@ -358,26 +357,28 @@ function startFallingNotes() {
     note.className = 'falling-note';
     note.textContent = notesList[Math.floor(Math.random() * notesList.length)];
     
-    // 画面の右上付近からスタート（横幅の60%〜110%の間）
-    const startX = (window.innerWidth * 0.6) + (Math.random() * (window.innerWidth * 0.5));
+    // 確実に対角線上に流すため、画面の上端かつ右寄りの位置（横幅の70%〜120%）からスタート
+    const startX = (window.innerWidth * 0.7) + (Math.random() * (window.innerWidth * 0.5));
     note.style.left = startX + 'px';
     note.style.top = '-40px';
     
-    // ランダムな大きさ (16px 〜 36px)
-    const size = 16 + Math.random() * 20;
+    // ランダムな大きさ (16px 〜 34px)
+    const size = 16 + Math.random() * 18;
     note.style.fontSize = size + 'px';
     
-    // ランダムなアニメーション速度 (4秒 〜 8秒)
-    const duration = 4 + Math.random() * 4;
-    note.style.animationDuration = duration + 's';
+    // ランダムな演奏速度のような降下時間 (4.5秒 〜 8.5秒)
+    const duration = 4.5 + Math.random() * 4;
+    
+    // インラインCSSでアニメーションを適用して確実に行わせる
+    note.style.animation = `diagonalFall ${duration}s linear forwards`;
     
     container.appendChild(note);
     
-    // 画面外に消えたら要素を削除
+    // 画面下に消え去った頃に要素を自動削除して軽量化
     setTimeout(() => {
       note.remove();
     }, duration * 1000);
-  }, 400); // 0.4秒ごとに新しい音符を降らせる
+  }, 450); // 約0.45秒ごとに次々と降らせます
 }
 
 function stopFallingNotes() {
@@ -385,7 +386,7 @@ function stopFallingNotes() {
   container.style.display = 'none';
   clearInterval(noteIntervalId);
   noteIntervalId = null;
-  container.innerHTML = ''; // 画面に残っている音符を一掃
+  container.innerHTML = ''; 
 }
 
 // ─── START GAME ──────────────────────────────────────────
@@ -420,7 +421,7 @@ function nextQuestion() {
   
   if (currentLevel === 1) targetFreq = refFreq;
   else if (currentLevel === 2) targetFreq = refFreq * Math.pow(2, (Math.random() > 0.5 ? 7 : -5) / 12);
-  else targetFreq = refFreq * 1.25 * Math.pow(2, -13.7/1200); // 純正律3度のピタゴラス補正
+  else targetFreq = refFreq * 1.25 * Math.pow(2, -13.7/1200); 
 
   document.getElementById('ref-note').textContent = freqToNote(refFreq);
   document.getElementById('target-note').textContent = freqToNote(targetFreq);
@@ -433,7 +434,7 @@ function nextQuestion() {
     document.getElementById('countdown-wrap').classList.add('show');
     startTime = Date.now();
     pitchLoop();
-    setTimeout(evaluateFinal, 5000); // 5秒後に判定を一発で行うロングトーン仕様
+    setTimeout(evaluateFinal, 5000); 
   }, 2800);
 }
 
