@@ -6,7 +6,7 @@
     <title>pitch training！ - 音程トレーニング</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght=500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     
     <style>
@@ -380,7 +380,7 @@
                     <h3><i class="ti ti-notes"></i> Lv3 あそびかた</h3>
                     <ol>
                         <li>うつくしい和音の「長3度」をねらいます。</li>
-                        <li>平均律より<strong>13.7¢低い音</strong>を、プログラムが自動でメーターの真ん中「0¢」に補正してくれます！真ん中をねらえば完璧にハモるよ！</li>
+                        <li>平均律より<strong>13.7¢低い音</strong>を、プログラムが自動でメーターの真ん中「0¢」に補正してくれます！</li>
                     </ol>
                 </div>
             </div>
@@ -426,37 +426,30 @@
     </div>
 
     <script>
-        // --- 音声解析・システム用グローバル変数 ---
         let audioContext = null;
         let analyser = null;
         let dataArray = null;
         let isPitchLoopRunning = false;
         
-        // 問題システム用の変数
-        let baseBfFreq = 466.16; // デフォルトは②
+        let baseBfFreq = 466.16;
         let currentLevel = 1;
-        let currentQuestionNo = 1; // 1〜10問
+        let currentQuestionNo = 1;
         let totalScore = 0;
         
-        // 現在の問題データ
         let currentRefFreq = 466.16;
         let currentTargetFreq = 466.16;
-        let lastCentsDiff = 999; // 最後に吹いた音のズレ（スコア計算用）
-        let isPlayingRef = false; // 基準音が鳴っている間はマイク入力を無視する
+        let lastCentsDiff = 999;
+        let isPlayingRef = false;
 
-        // 音名配列（実音B♭の前後数半音の範囲、インデックス6がB♭）
         const NOTE_NAMES = ["G", "A♭", "A", "B♭", "B", "C", "D♭", "D", "E♭", "E", "F", "G♭"];
-        // B♭を基準(0)とした時の各音名の半音差
         const NOTE_SEMITONES = [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8];
 
-        // 楽器選択が変わったら自動で基準B♭の周波数を設定
         function updateBaseFreqByInstrument() {
             const select = document.getElementById('instrument');
             const selectedOption = select.options[select.selectedIndex];
             const freqAttr = selectedOption.getAttribute('data-freq');
             if (freqAttr) {
                 baseBfFreq = parseFloat(freqAttr);
-                console.log(`基準B♭周波数を設定しました: ${baseBfFreq} Hz`);
             }
         }
 
@@ -492,22 +485,25 @@
         }
 
         async function initAudio() {
-            if (audioContext) return;
             try {
+                if (audioContext && audioContext.state === 'running') return;
+                if (audioContext && audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                    return;
+                }
+
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 2048;
-                const source = audioContext.createMediaStreamSource(stream);
-                source.connect(analyser);
+                const mediaSource = audioContext.createMediaStreamSource(stream);
+                mediaSource.connect(analyser);
                 dataArray = new Float32Array(analyser.fftSize);
             } catch (err) {
-                alert("マイクの許可が得られませんでした。");
-                console.error(err);
+                console.error("マイク接続エラー: ", err);
             }
         }
 
-        // --- 問題システム：クイズ全体の初期化 ---
         function initQuiz(level) {
             currentLevel = level;
             currentQuestionNo = 1;
@@ -516,31 +512,26 @@
             makeQuestion();
         }
 
-        // 1問作成する関数
         function makeQuestion() {
-            lastCentsDiff = 999; // リセット
+            initAudio(); 
+            lastCentsDiff = 999;
             document.getElementById('progress').innerHTML = `<i class="ti ti-bolt"></i> 問題 ${currentQuestionNo} / 10`;
             document.getElementById('live-status').innerText = "「基準音をきく」ボタンを押してね";
             document.getElementById('pointer').style.left = "50%";
 
-            // 実音B♭の前後数半音（例:-2〜+5半音）の範囲でランダムに基準音を選択
-            const randomOffsetIndex = Math.floor(Math.random() * 8); // 0〜7
-            const semitoneOffsetFromBf = NOTE_SEMITONES[randomOffsetIndex + 2]; // 少し範囲を絞る (-1〜+6等)
+            const randomOffsetIndex = Math.floor(Math.random() * 8);
+            const semitoneOffsetFromBf = NOTE_SEMITONES[randomOffsetIndex + 2];
             const refNoteName = NOTE_NAMES[randomOffsetIndex + 2];
 
-            // 基準音の周波数を計算
             currentRefFreq = baseBfFreq * Math.pow(2, semitoneOffsetFromBf / 12);
             document.getElementById('ref-sound-text').innerHTML = `基準音: <strong>${refNoteName}</strong> (${currentRefFreq.toFixed(1)} Hz)`;
 
-            // レベルに応じて「ねらう音」のターゲット周波数を設定
             if (currentLevel === 1) {
-                // ユニゾン
                 currentTargetFreq = currentRefFreq;
                 document.getElementById('target-sound-text').innerHTML = `ねらう音: <strong>${refNoteName}</strong> <span style="font-size:13px;color:#8a7e7d;">(同じ高さ)</span>`;
                 document.getElementById('meter-caption').innerText = '基準音とぴったり同じ高さを狙おう！';
             } 
             else if (currentLevel === 2) {
-                // パワーコード（5度上[+7半音] か 4度下[-5半音] をランダムに）
                 const isFiveUp = Math.random() >= 0.5;
                 if (isFiveUp) {
                     currentTargetFreq = currentRefFreq * Math.pow(2, 7 / 12);
@@ -552,16 +543,13 @@
                 document.getElementById('meter-caption').innerText = 'ハーモニーの骨組み（5度/4度）を感じてハモらせよう！';
             } 
             else if (currentLevel === 3) {
-                // 純正律長3度（+4半音上、ただし★平均律より13.7¢低い音を真のターゲットとする）
-                const standardThirdFreq = currentRefFreq * Math.pow(2, 4 / 12); // 平均律の長3度
-                // 13.7セント低く補正する公式: F_pure = F_equal * 2^(-13.7/1200)
+                const standardThirdFreq = currentRefFreq * Math.pow(2, 4 / 12);
                 currentTargetFreq = standardThirdFreq * Math.pow(2, -13.7 / 1200);
                 
                 document.getElementById('target-sound-text').innerHTML = `ねらう音: <strong>長3度上の音</strong> <span style="font-size:13px;color:#ff527b;">★純正律モード</span>`;
                 document.getElementById('meter-caption').innerText = '【自動補正】真ん中(0¢)を狙えば自動的に-13.7¢低い純正律になります！';
             }
 
-            // 最後に「次の問題へ」のボタンテキストを調整
             if (currentQuestionNo === 10) {
                 document.getElementById('next-question-btn').innerHTML = `結果をみる <i class="ti ti-trophy"></i>`;
             } else {
@@ -569,33 +557,30 @@
             }
         }
 
-        // --- 基準音再生関数（低音響対策＆鋸歯状波仕様） ---
-        function playRef() {
+        async function playRef() {
+            await initAudio(); 
+
             if (!audioContext || isPlayingRef) return;
             isPlayingRef = true;
             document.getElementById('mic-status-title').innerText = "基準音再生中...";
             document.getElementById('live-status').innerText = "じっくり聴いてね...";
 
-            // オシレーターと音量調節(Gain)を作成
             const osc = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
 
-            // スマホスピーカーでも倍音がハッキリ聞こえる「鋸歯状波(sawtooth)」に設定
             osc.type = 'sawtooth';
             osc.frequency.value = currentRefFreq;
 
-            // 低音ほど聞き取りにくい耳の特性に合わせたボリューム出し分け
-            let volume = 0.08; // 通常(300Hz以上)
+            let volume = 0.08;
             if (currentRefFreq < 150) {
-                volume = 0.18; // ④チューバなど超低音は大きく
+                volume = 0.18;
             } else if (currentRefFreq < 300) {
-                volume = 0.13; // ③トロンボーンなどの中低音
+                volume = 0.13;
             }
             
-            // 2.5秒後に滑らかに消える(フェードアウト)設定
             const now = audioContext.currentTime;
             gainNode.gain.setValueAtTime(volume, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 2.5); // 2.5秒かけて消える
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
 
             osc.connect(gainNode);
             gainNode.connect(audioContext.destination);
@@ -603,13 +588,11 @@
             osc.start(now);
             osc.stop(now + 2.5);
 
-            // 再生が終わったらマイク入力待ちに切り替える
             setTimeout(() => {
                 isPlayingRef = false;
                 document.getElementById('mic-status-title').innerText = "さあ、吹いてみよう！";
                 document.getElementById('live-status').innerText = "声をだすか、楽器を吹いてね";
                 
-                // ピッチ検出ループを回す
                 if (!isPitchLoopRunning) {
                     isPitchLoopRunning = true;
                     requestAnimationFrame(updatePitchLoop);
@@ -617,19 +600,16 @@
             }, 2500);
         }
 
-        // 1問ごとのスコア判定と次の問題への遷移
         function evaluateAndNext() {
-            // スコア計算：今回の問題の得点を算出（1問につき最大10点とする）
             let questionScore = 0;
             if (lastCentsDiff === 999) {
-                // 音が検知されなかった場合は0点
                 questionScore = 0;
             } else {
                 const absDiff = Math.abs(lastCentsDiff);
-                if (absDiff <= 2.0) questionScore = 10;       // ほぼ完ぺき
-                else if (absDiff <= 5.0) questionScore = 9;   // 優秀
-                else if (absDiff <= 10.0) questionScore = 7;  // Good
-                else if (absDiff <= 20.0) questionScore = 4;  // あとすこし
+                if (absDiff <= 2.0) questionScore = 10;
+                else if (absDiff <= 5.0) questionScore = 9;
+                else if (absDiff <= 10.0) questionScore = 7;
+                else if (absDiff <= 20.0) questionScore = 4;
                 else if (absDiff <= 40.0) questionScore = 2;
                 else questionScore = 0;
             }
@@ -640,22 +620,17 @@
                 currentQuestionNo++;
                 makeQuestion();
             } else {
-                // 10問終わったらリザルト画面へ
                 isPitchLoopRunning = false;
                 showResult();
             }
         }
 
-        // リザルト画面の表示
         function showResult() {
             nextPage('result-page');
             const name = document.getElementById('user-name').value || '部員';
             document.getElementById('result-username').innerText = `${name} さんの今回のピッチスコア`;
-            
-            // 1問10点×10問＝100点満点に換算
             document.getElementById('final-score').innerText = `${totalScore}点`;
 
-            // コメントの出し分け
             const comment = document.getElementById('result-comment');
             if (totalScore >= 90) {
                 comment.innerText = "神ピッチです！合奏のコア（中心）になれる素晴らしい耳を持っています！";
@@ -668,11 +643,9 @@
             }
         }
 
-        // リアルタイムピッチ検出ループ
         function updatePitchLoop() {
             if (!isPitchLoopRunning) return;
             if (isPlayingRef) { 
-                // 基準音が鳴っている最中はマイク解析を一時スキップ
                 requestAnimationFrame(updatePitchLoop);
                 return; 
             }
@@ -688,22 +661,22 @@
                 if (freq === -1) {
                     liveStatus.innerText = "ーーー";
                     pointer.style.left = "50%";
+                    lastCentsDiff = 999; // 音が小さい時はリセット
                 } else {
-                    // セント（cents）の計算
                     let cents = 1200 * Math.log2(freq / currentTargetFreq);
                     
-                    // スコア判定用に、最新のズレをグローバル変数に保存
-                    lastCentsDiff = cents;
-
-                    // メーターの左右表示（-50¢ 〜 +50¢ を 0% 〜 100% へ）
-                    let percentage = ((cents + 50) / 100) * 100;
-                    if (percentage < 0) percentage = 0;
-                    if (percentage > 100) percentage = 100;
-
-                    pointer.style.left = `${percentage}%`;
-
-                    let sign = cents >= 0 ? "+" : "";
-                    liveStatus.innerHTML = `${freq.toFixed(1)} Hz (${sign}${cents.toFixed(1)} ¢)`;
+                    // セントが異常な値（メーター外）の時は描画をリセットしてノイズとして扱う
+                    if (isNaN(cents) || cents < -50 || cents > 50) {
+                        liveStatus.innerText = "ーーー";
+                        pointer.style.left = "50%";
+                        lastCentsDiff = 999;
+                    } else {
+                        lastCentsDiff = cents;
+                        let percentage = ((cents + 50) / 100) * 100;
+                        pointer.style.left = `${percentage}%`;
+                        let sign = cents >= 0 ? "+" : "";
+                        liveStatus.innerHTML = `${freq.toFixed(1)} Hz (${sign}${cents.toFixed(1)} ¢)`;
+                    }
                 }
             }
             requestAnimationFrame(updatePitchLoop);
@@ -718,7 +691,9 @@
                 rms += val * val;
             }
             rms = Math.sqrt(rms / size);
-            if (rms < 0.01) return -1; 
+            
+            // ★【ここを強化】rms（音の大きさ）が「0.035」未満の小さな雑音は完全にカットする！
+            if (rms < 0.035) return -1; 
 
             let r1 = 0, r2 = size - 1, thres = 0.2;
             for (let i = 0; i < size / 2; i++) {
