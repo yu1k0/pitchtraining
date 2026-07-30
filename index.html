@@ -72,7 +72,6 @@
         opacity: 1;
       }
       100% {
-        /* X軸をマイナス方向に大きく移動させて左下へ流す */
         transform: translate(-80vw, 110vh) rotate(-360deg);
         opacity: 0;
       }
@@ -152,7 +151,7 @@
     .note-display { display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px; }
     .note-box { text-align: center; }
     .note-label { font-size: 11px; color: var(--primary); font-weight: 900; letter-spacing: 0.1em; margin-bottom: 5px; }
-    .note-val { font-family: 'Space Mono', monospace; font-size: 42px; font-weight: 900; color: var(--secondary); min-height: 50px; }
+    .note-val { font-size: 32px; font-weight: 900; color: var(--secondary); min-height: 50px; }
     .note-arrow { font-size: 24px; color: #ffb3d9; padding-top: 15px; }
 
     .phase-msg { font-size: 20px; font-weight: 900; color: var(--secondary); min-height: 30px; text-align: center; margin-bottom: 10px; }
@@ -209,12 +208,19 @@
     <div class="app-sub">5秒間のまっすぐなロングトーンで、<br>きれいな音程をマスターしよう！</div>
     <label>研究員ネーム（おなまえ）</label>
     <input type="text" id="user-name" placeholder="なまえをいれてね">
-    <label>担当楽器グループ</label>
+    <label>担当楽器</label>
     <select id="user-inst">
-      <option value="1">① フルート (B♭5音域)</option>
-      <option value="2">② クラ・アルトSax・Tp・Ob (B♭4音域)</option>
-      <option value="3">③ Hr・Tb・Euph・テナー (B♭3音域)</option>
-      <option value="4">④ チューバ・コントラバス (B♭2音域)</option>
+      <option value="flute">フルート (C管)</option>
+      <option value="clarinet">クラリネット (B♭管)</option>
+      <option value="alto_sax">アルトサックス (E♭管)</option>
+      <option value="tenor_sax">テナーサックス (B♭管)</option>
+      <option value="bari_sax">バリトンサックス (E♭管)</option>
+      <option value="bass_cl">バスクラリネット (B♭管)</option>
+      <option value="trumpet">トランペット (B♭管)</option>
+      <option value="horn">ホルン (F管)</option>
+      <option value="trombone">トロンボーン (C管/実音読み)</option>
+      <option value="euphonium">ユーフォニウム (C管/実音読み)</option>
+      <option value="tuba">チューバ (C管/実音読み)</option>
     </select>
     <button class="btn" onclick="goToMenu()">メニューへ進む ♬</button>
     <button class="btn btn-outline" onclick="showHistoryScreen()">📊 過去の練習記録</button>
@@ -301,8 +307,23 @@
 </div>
 
 <script>
-// 🚀 スプレッドシート連携用URL
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx1WFxsM1_fJZIdnWWQ1UmiLUmtx8Nl39ziPVmSjhFwVZplTYlEJh0K6wUpN30RXOg/exec";
+
+// ─── 楽器定義（基準B♭の周波数と移調半音数） ─────────────────────
+// transpose: 実音(C)に対するその楽器の読替え半音シフト量
+const instrumentSettings = {
+  "flute":      { baseFreq: 932.33, transpose: 0 },   // C管
+  "clarinet":   { baseFreq: 466.16, transpose: +2 },  // B♭管 (実音C->記譜D: +2)
+  "alto_sax":   { baseFreq: 466.16, transpose: +9 },  // E♭管 (実音C->記譜A: +9)
+  "tenor_sax":  { baseFreq: 233.08, transpose: +2 },  // B♭管 (実音C->記譜D: +2)
+  "bari_sax":   { baseFreq: 116.54, transpose: +9 },  // E♭管 (実音C->記譜A: +9)
+  "bass_cl":    { baseFreq: 233.08, transpose: +2 },  // B♭管 (実音C->記譜D: +2)
+  "trumpet":    { baseFreq: 466.16, transpose: +2 },  // B♭管 (実音C->記譜D: +2)
+  "horn":       { baseFreq: 349.23, transpose: +7 },  // F管 (実音C->記譜G: +7)
+  "trombone":   { baseFreq: 233.08, transpose: 0 },   // C管実音読み
+  "euphonium":  { baseFreq: 233.08, transpose: 0 },   // C管実音読み
+  "tuba":       { baseFreq: 116.54, transpose: 0 }    // C管実音読み
+};
 
 // ─── STATE ───────────────────────────────────────────────
 let audioCtx, micStream, analyst, source, refOsc, rafId;
@@ -312,11 +333,10 @@ let excelCount = 0, greatCount = 0, goodCount = 0, almostCount = 0;
 let resultLog = [], lastDetectedCents = null;
 let noteIntervalId = null; 
 
-const baseBflats = { "1": 932.33, "2": 466.16, "3": 233.08, "4": 116.54 };
 const levelPurposes = { 
   1: "💡 同じ音を正確に合わせる練習です", 
   2: "💡 5度・4度のピッチ感覚を鍛えます", 
-  3: "💡 純正律3度のうねりのない響きを作ります" 
+  3: "💡 純正律ハーモニーのうねりのない響きを作ります" 
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -344,7 +364,7 @@ function goToMenu() {
   showScreen('screen-menu');
 }
 
-// ─── FALLING NOTES ANIMATION (右上から左下へ降る機能) ───────
+// ─── FALLING NOTES ANIMATION ────────────────────────────
 function startFallingNotes() {
   const container = document.getElementById('notes-container');
   container.style.display = 'block';
@@ -357,28 +377,20 @@ function startFallingNotes() {
     note.className = 'falling-note';
     note.textContent = notesList[Math.floor(Math.random() * notesList.length)];
     
-    // 確実に対角線上に流すため、画面の上端かつ右寄りの位置（横幅の70%〜120%）からスタート
     const startX = (window.innerWidth * 0.7) + (Math.random() * (window.innerWidth * 0.5));
     note.style.left = startX + 'px';
     note.style.top = '-40px';
     
-    // ランダムな大きさ (16px 〜 34px)
     const size = 16 + Math.random() * 18;
     note.style.fontSize = size + 'px';
     
-    // ランダムな演奏速度のような降下時間 (4.5秒 〜 8.5秒)
     const duration = 4.5 + Math.random() * 4;
-    
-    // インラインCSSでアニメーションを適用して確実に行わせる
     note.style.animation = `diagonalFall ${duration}s linear forwards`;
     
     container.appendChild(note);
     
-    // 画面下に消え去った頃に要素を自動削除して軽量化
-    setTimeout(() => {
-      note.remove();
-    }, duration * 1000);
-  }, 450); // 約0.45秒ごとに次々と降らせます
+    setTimeout(() => { note.remove(); }, duration * 1000);
+  }, 450);
 }
 
 function stopFallingNotes() {
@@ -398,6 +410,9 @@ async function startGame(lv) {
   try {
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
     analyst = audioCtx.createAnalyser();
     analyst.fftSize = 2048;
     source = audioCtx.createMediaStreamSource(micStream);
@@ -408,6 +423,7 @@ async function startGame(lv) {
 
 // ─── QUESTION CYCLE ──────────────────────────────────────
 function nextQuestion() {
+  if (rafId) cancelAnimationFrame(rafId);
   if (qNum >= 10) return endGame();
   qNum++;
   document.getElementById('q-label').textContent = `課題 ${qNum}/10`;
@@ -416,15 +432,18 @@ function nextQuestion() {
   document.getElementById('pointer').style.left = '50%';
   document.getElementById('countdown-wrap').classList.remove('show');
   
-  const base = baseBflats[document.getElementById('user-inst').value];
+  const instKey = document.getElementById('user-inst').value;
+  const instSetting = instrumentSettings[instKey] || instrumentSettings["flute"];
+  const base = instSetting.baseFreq;
+
   refFreq = base * Math.pow(2, (Math.floor(Math.random() * 13) - 6) / 12);
   
   if (currentLevel === 1) targetFreq = refFreq;
   else if (currentLevel === 2) targetFreq = refFreq * Math.pow(2, (Math.random() > 0.5 ? 7 : -5) / 12);
   else targetFreq = refFreq * 1.25 * Math.pow(2, -13.7/1200); 
 
-  document.getElementById('ref-note').textContent = freqToNote(refFreq);
-  document.getElementById('target-note').textContent = freqToNote(targetFreq);
+  document.getElementById('ref-note').textContent = freqToNote(refFreq, instKey);
+  document.getElementById('target-note').textContent = freqToNote(targetFreq, instKey);
   
   setPhase('🎵 きほんの音をきいてね...', '');
   playRef(refFreq);
@@ -468,6 +487,7 @@ function updateUI(diff) {
 // ─── EVALUATION ──────────────────────────────────────────
 function evaluateFinal() {
   cancelAnimationFrame(rafId);
+  const instKey = document.getElementById('user-inst').value;
   const finalCents = lastDetectedCents !== null ? lastDetectedCents : 999;
   const abs = Math.abs(finalCents);
   let resText = "", pts = 0, tag = "";
@@ -478,34 +498,31 @@ function evaluateFinal() {
   else { resText = "Almost 💦"; pts = 10; tag = "tag-almost"; almostCount++; }
 
   totalScore += (pts * currentLevel);
-  resultLog.push({ q: qNum, note: freqToNote(targetFreq), diff: finalCents === 999 ? "--" : finalCents.toFixed(1), result: resText, pts: pts * currentLevel, tag: tag });
+  resultLog.push({ q: qNum, note: freqToNote(targetFreq, instKey), diff: finalCents === 999 ? "--" : finalCents.toFixed(1), result: resText, pts: pts * currentLevel, tag: tag });
   sendToGAS(qNum, resText, finalCents, pts * currentLevel);
   setTimeout(nextQuestion, 1200);
 }
 
 function passQuestion() {
   cancelAnimationFrame(rafId); stopRef();
-  resultLog.push({ q: qNum, note: freqToNote(targetFreq), diff: "--", result: "パス 🐾", pts: 0, tag: "tag-almost" });
+  const instKey = document.getElementById('user-inst').value;
+  resultLog.push({ q: qNum, note: freqToNote(targetFreq, instKey), diff: "--", result: "パス 🐾", pts: 0, tag: "tag-almost" });
   nextQuestion();
 }
 
 // ─── AUDIO REFERENCE SOURCE ──────────────────────────────
 function playRef(f) {
   stopRef();
-
-  // オシレーター2本で厚みを出す
   const osc1 = audioCtx.createOscillator();
   const osc2 = audioCtx.createOscillator();
-
   const gainNode = audioCtx.createGain();
 
   osc1.type = 'square';
   osc2.type = 'triangle';
 
   osc1.frequency.value = f;
-  osc2.frequency.value = f * 0.998; // 少しずらして厚み
+  osc2.frequency.value = f * 0.998;
 
-  // ← ここが全体音量
   gainNode.gain.value = 0.8;
 
   osc1.connect(gainNode);
@@ -522,10 +539,9 @@ function playRef(f) {
     }
   };
 
-  // フェードアウト
   gainNode.gain.setValueAtTime(0.7, audioCtx.currentTime);
   gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.5);
-}  
+}   
 function stopRef() { if (refOsc) { try{refOsc.stop();}catch(e){} refOsc = null; } }
   
 // ─── DATA TRANSMISSION (GAS) ─────────────────────────────
@@ -589,12 +605,21 @@ function autoCorrelate(buf, sr) {
   return sr / maxPos;
 }
 
-function freqToNote(f) {
-  const notes = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  const i = Math.round(12 * Math.log2(f / 440)) + 69;
-  let n = notes[((i % 12) + 12) % 12];
-  if(n.includes('#')) n = n.replace('#', '♯').replace('A♯','B♭').replace('D♯','E♭').replace('G♯','A♭').replace('C♯','D♭').replace('F♯','G♭');
-  return n + Math.floor(i / 12 - 1);
+// ─── 移調＆カタカナ音名変換（ドレミ表記） ──────────────────
+function freqToNote(f, instKey) {
+  // 固定ド（カタカナ）配列：C, C#, D, D#, E, F, F#, G, G#, A, A#, B
+  const doReMiNames = ['ド', 'ド♯', 'レ', 'レ♯', 'ミ', 'ファ', 'ファ♯', 'ソ', 'ソ♯', 'ラ', 'ラ♯', 'シ'];
+  
+  // A4 = 440Hz からの実音(C)ノート番号（C4を0とした相対値）
+  const noteNum = Math.round(12 * Math.log2(f / 440)) + 57; // 57はC4に対するA4のインデックスオフセット
+  
+  // 楽器の移調シフト数を取得
+  const inst = instrumentSettings[instKey] || instrumentSettings["flute"];
+  const transposedNoteNum = noteNum + inst.transpose;
+  
+  // 12音階に収める
+  const noteIndex = ((transposedNoteNum % 12) + 12) % 12;
+  return doReMiNames[noteIndex];
 }
 </script>
 </body>
