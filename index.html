@@ -1,626 +1,1183 @@
 <!DOCTYPE html>
+
 <html lang="ja">
+
 <head>
+
   <meta charset="UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
   <title>pitch training♬</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
+
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
   <style>
+
     :root {
+
       /* ピンクを基調としたカラーパレット */
+
       --primary: #ff66aa; /* パステルピンク */
+
       --secondary: #ff007f; /* 蛍光ピンク */
+
       --accent: #ff007f;
+
       --success: #2ed573;
+
       --perfect: #ff007f;
+
       --warn: #ff9f43;
+
       --bg-gradient: linear-gradient(135deg, #ffd6e7 0%, #ff007f 100%);
+
       --card: rgba(255, 255, 255, 0.95);
+
       --text: #4a4a4a;
+
       --muted: #8e8e8e;
+
       --radius: 32px; /* 全パーツ共通：角の大きな丸み */
+
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
+
       font-family: 'Zen Maru Gothic', sans-serif;
+
       background: var(--bg-gradient);
+
       background-attachment: fixed;
+
       color: var(--text);
+
       min-height: 100vh;
+
       display: flex;
+
       flex-direction: column;
+
       align-items: center;
+
       justify-content: flex-start;
+
       padding: 16px;
+
       overflow-x: hidden;
+
       position: relative;
+
     }
 
     /* 音符が降る背景コンテナ */
+
     #notes-container {
+
       position: fixed;
+
       top: 0; left: 0; width: 100%; height: 100%;
+
       pointer-events: none; /* クリックを邪魔しない */
+
       z-index: 0;
+
       overflow: hidden;
+
       display: none; /* メニュー画面の時だけJSで表示 */
+
     }
 
     /* 降る音符のスタイル */
+
     .falling-note {
+
       position: absolute;
+
       color: rgba(255, 255, 255, 0.65);
+
       font-weight: bold;
+
       line-height: 1;
+
       text-shadow: 0 0 6px rgba(255, 0, 127, 0.2);
+
     }
 
     /* 右上から左下へ綺麗に流れるアニメーション設定 */
+
     @keyframes diagonalFall {
+
       0% {
+
         transform: translate(0, 0) rotate(0deg);
+
         opacity: 0;
+
       }
+
       10% {
+
         opacity: 1;
+
       }
+
       90% {
+
         opacity: 1;
+
       }
+
       100% {
+
         transform: translate(-80vw, 110vh) rotate(-360deg);
+
         opacity: 0;
+
       }
+
     }
 
     .screen { display: none; width: 100%; max-width: 460px; animation: fadeIn 0.4s ease; position: relative; z-index: 1; }
+
     .screen.active { display: block; }
+
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
     .card {
+
       background: var(--card);
+
       border-radius: var(--radius);
+
       padding: 30px 24px;
+
       box-shadow: 0 15px 35px rgba(255, 0, 127, 0.2);
+
       margin-bottom: 20px;
+
       border: 2px solid rgba(255, 255, 255, 0.5);
+
       backdrop-filter: blur(10px);
+
     }
 
     .app-title {
+
       font-size: 36px; font-weight: 900; color: var(--secondary);
+
       letter-spacing: -0.02em; margin-bottom: 8px; text-align: center;
+
       text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.5);
+
     }
+
     .app-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; text-align: center; font-weight: 700; }
 
     label { font-size: 13px; color: var(--primary); display: block; margin-bottom: 6px; margin-top: 16px; font-weight: 900; letter-spacing: 0.05em; padding-left: 10px; }
-    
+
     input, select {
+
       width: 100%; padding: 16px 20px;
+
       border-radius: var(--radius); border: 2px solid #ffe0ed;
+
       font-size: 16px; font-family: inherit; font-weight: 700;
+
       background: #fff; color: var(--text);
+
       outline: none; transition: border 0.3s, box-shadow 0.3s;
+
     }
+
     input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 10px rgba(255, 0, 127, 0.1); }
 
     .btn {
+
       display: block; width: 100%; padding: 18px;
+
       border-radius: var(--radius); border: none;
+
       background: linear-gradient(135deg, #ff66aa, #ff007f);
+
       color: white; font-weight: 900; font-family: inherit;
+
       cursor: pointer; font-size: 18px; margin-top: 20px;
+
       box-shadow: 0 8px 20px rgba(255, 0, 127, 0.3);
+
       transition: transform 0.1s, box-shadow 0.2s;
+
       text-align: center;
+
     }
+
     .btn:active { transform: translateY(3px) scale(0.98); box-shadow: 0 4px 10px rgba(255, 0, 127, 0.2); }
 
     .btn-outline {
+
       background: transparent; color: var(--secondary);
+
       border: 3px solid var(--secondary); box-shadow: none;
+
       font-size: 14px; margin-top: 14px; padding: 14px; font-weight: 900;
+
     }
 
     .btn-back {
+
       background: linear-gradient(135deg, #747d8c, #57606f);
+
       box-shadow: 0 5px 15px rgba(0,0,0,0.1); font-size: 14px; margin-top: 10px;
+
     }
 
     .btn-pass {
+
       background: linear-gradient(135deg, #bdc3c7, #8e9eab);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1); font-size: 14px; width: 60%; margin: 15px auto;
+
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1); font-size: 14px; width: 60%; margin: 15px auto 5px auto;
+
+    }
+
+    .btn-quit {
+
+      background: linear-gradient(135deg, #ff7675, #d63031);
+
+      box-shadow: 0 5px 15px rgba(214, 48, 49, 0.2); font-size: 14px; width: 60%; margin: 5px auto 15px auto;
+
     }
 
     /* ─── GAME UI ─── */
+
     .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+
     .q-badge { background: #fff1f8; color: var(--secondary); padding: 8px 16px; border-radius: var(--radius); font-size: 14px; font-weight: 900; border: 2px solid #ffe0ed; }
+
     .score-badge { background: var(--secondary); color: white; padding: 8px 20px; border-radius: var(--radius); font-size: 14px; font-weight: 900; }
 
     .level-purpose-banner {
+
       background: #fff9fc; border: 2px dashed #ffb3d9; border-radius: 20px;
+
       padding: 10px; font-size: 12px; color: var(--secondary); font-weight: 700;
+
       margin-bottom: 20px; text-align: center;
+
     }
 
     .note-display { display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px; }
+
     .note-box { text-align: center; }
+
     .note-label { font-size: 11px; color: var(--primary); font-weight: 900; letter-spacing: 0.1em; margin-bottom: 5px; }
+
     .note-val { font-size: 32px; font-weight: 900; color: var(--secondary); min-height: 50px; }
+
     .note-arrow { font-size: 24px; color: #ffb3d9; padding-top: 15px; }
 
     .phase-msg { font-size: 20px; font-weight: 900; color: var(--secondary); min-height: 30px; text-align: center; margin-bottom: 10px; }
 
     .cent-display { font-family: 'Space Mono', monospace; font-size: 48px; font-weight: 900; min-height: 60px; color: var(--text); text-align: center; margin: 10px 0; }
+
     .cent-display.excellent { color: var(--success); }
+
     .cent-display.perfect { color: var(--secondary); }
+
     .cent-display.off { color: var(--muted); }
 
     .gauge-wrap { position: relative; margin: 20px 0; }
+
     .gauge-bg { height: 26px; background: #ffe6f0; border-radius: 13px; overflow: hidden; position: relative; border: 2px solid #fff; }
+
     .gauge-zone-10 { position: absolute; left: 40%; width: 20%; height: 100%; background: rgba(255, 102, 170, 0.3); }
+
     .gauge-zone-2 { position: absolute; left: 48%; width: 4%; height: 100%; background: var(--secondary); opacity: 0.8; }
+
     .gauge-ptr {
+
       position: absolute; top: 0; width: 6px; height: 100%;
+
       background: #333; border-radius: 3px; transform: translateX(-50%); transition: left 0.1s linear;
+
     }
 
     .countdown-wrap { background: #fff1f8; border-radius: 20px; padding: 14px; margin-top: 15px; border: 2px solid #ffb3d9; visibility: hidden; }
+
     .countdown-wrap.show { visibility: visible; }
+
     .countdown-label { font-size: 14px; font-weight: 900; color: var(--secondary); margin-bottom: 8px; text-align: center; }
+
     .prog-bg { height: 12px; background: #ffd6e7; border-radius: 6px; overflow: hidden; }
+
     .prog-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff66aa, #ff007f); transition: width 0.1s linear; }
 
     /* ─── RESULT ─── */
+
     .result-big { font-family: 'Space Mono', monospace; font-size: 80px; font-weight: 900; color: var(--secondary); text-align: center; margin: 10px 0; }
+
     .result-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin: 20px 0; }
+
     .result-cell { background: #fff5f9; border-radius: 20px; padding: 12px 4px; text-align: center; border: 1px solid #ffe0ed; }
+
     .result-cell .val { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 900; color: var(--secondary); }
+
     .result-cell .lbl { font-size: 10px; color: var(--muted); margin-top: 4px; font-weight: 700; }
 
     .log-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+
     .log-table th { color: var(--primary); padding: 8px 4px; font-weight: 900; text-align: center; border-bottom: 2px solid #ffe0ed; }
+
     .log-table td { padding: 10px 4px; text-align: center; border-bottom: 1px solid #fff0f7; }
-    
+
     .tag-excellent { background: #e8fdf3; color: #1c9e5a; padding: 4px 8px; border-radius: 12px; font-weight: 900; }
+
     .tag-almost { background: #f1f2f6; color: #57606f; padding: 4px 8px; border-radius: 12px; font-weight: 900; }
 
     .history-box { max-height: 280px; overflow-y: auto; border-radius: 20px; background: #fff9fb; padding: 5px; }
+
     .history-item { border-bottom: 1px solid #ffe0ed; background: #fff; border-radius: 15px; margin-bottom: 5px; overflow: hidden; }
+
     .history-summary { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+
     .history-summary b { color: var(--secondary); font-size: 16px; }
+
     .history-details { display: none; padding: 10px; background: #fff5f9; }
+
     .history-item.open .history-details { display: block; }
+
   </style>
+
 </head>
+
 <body>
 
 <div id="notes-container"></div>
 
 <div id="screen-login" class="screen active">
+
   <div class="card">
+
     <div class="app-title">pitch training♬</div>
+
     <div class="app-sub">5秒間のまっすぐなロングトーンで、<br>きれいな音程をマスターしよう！</div>
+
     <label>研究員ネーム（おなまえ）</label>
+
     <input type="text" id="user-name" placeholder="なまえをいれてね">
+
     <label>担当楽器</label>
+
     <select id="user-inst">
+
       <option value="flute">フルート (C管)</option>
+
       <option value="clarinet">クラリネット (B♭管)</option>
+
       <option value="alto_sax">アルトサックス (E♭管)</option>
+
       <option value="tenor_sax">テナーサックス (B♭管)</option>
+
       <option value="bari_sax">バリトンサックス (E♭管)</option>
+
       <option value="bass_cl">バスクラリネット (B♭管)</option>
+
       <option value="trumpet">トランペット (B♭管)</option>
+
       <option value="horn">ホルン (F管)</option>
+
       <option value="trombone">トロンボーン (C管/実音読み)</option>
+
       <option value="euphonium">ユーフォニウム (C管/実音読み)</option>
+
       <option value="tuba">チューバ (C管/実音読み)</option>
+
     </select>
+
     <button class="btn" onclick="goToMenu()">メニューへ進む ♬</button>
+
     <button class="btn btn-outline" onclick="showHistoryScreen()">📊 過去の練習記録</button>
+
   </div>
+
 </div>
 
 <div id="screen-history" class="screen">
+
   <div class="card">
+
     <h2 style="color:var(--secondary); margin-bottom:15px; text-align:center;">練習の履歴</h2>
+
     <div class="history-box" id="history-container"></div>
+
     <button class="btn btn-outline" style="border-color:#ff4757; color:#ff4757;" onclick="clearAllHistory()">履歴をすべて消去する</button>
+
   </div>
+
   <button class="btn btn-back" onclick="showScreen('screen-login')">← もどる</button>
+
 </div>
 
 <div id="screen-menu" class="screen">
+
   <div class="card">
+
     <h2 style="color:var(--secondary); margin-bottom:20px; text-align:center;">練習メニュー</h2>
+
     <button class="btn" onclick="startGame(1)">🎯 Lv.1：ユニゾン</button>
+
     <button class="btn" onclick="startGame(2)">🎵 Lv.2：パワーコード</button>
+
     <button class="btn" onclick="startGame(3)">✨ Lv.3：純正律ハーモニー</button>
+
   </div>
+
   <button class="btn btn-back" onclick="showScreen('screen-login')">← もどる</button>
+
 </div>
 
 <div id="screen-game" class="screen">
+
   <div class="card">
+
     <div class="game-header">
+
       <div class="q-badge" id="q-label">課題 1/10</div>
+
       <div class="score-badge">スコア: <span id="current-score">0</span></div>
+
     </div>
+
     <div class="level-purpose-banner" id="level-purpose-text">目的を表示中...</div>
 
     <div class="note-display">
+
       <div class="note-box">
+
         <div class="note-label">基 準 音</div>
+
         <div class="note-val" id="ref-note">--</div>
+
       </div>
+
       <div class="note-arrow">▶</div>
+
       <div class="note-box">
+
         <div class="note-label">ねらう音</div>
+
         <div class="note-val" id="target-note">--</div>
+
       </div>
+
     </div>
 
     <div class="phase-msg" id="phase-msg">準備中...</div>
+
     <div class="cent-display" id="cent-val">--</div>
 
     <div class="gauge-wrap">
+
       <div class="gauge-bg">
+
         <div class="gauge-zone-10"></div>
+
         <div class="gauge-zone-2"></div>
+
         <div class="gauge-ptr" id="pointer" style="left:50%"></div>
+
       </div>
+
       <div class="gauge-labels"><span>-50¢</span><span>0¢</span><span>+50¢</span></div>
+
     </div>
 
     <div class="countdown-wrap" id="countdown-wrap">
+
       <div class="countdown-label" id="countdown-label">のこり時間: 5.00秒</div>
+
       <div class="prog-bg"><div id="prog-fill" class="prog-fill"></div></div>
+
     </div>
+
   </div>
+
   <button class="btn btn-pass" onclick="passQuestion()">この問題をスキップ 🐾</button>
+
+  <button class="btn btn-quit" onclick="quitGame()">練習をやめる 🏠</button>
+
 </div>
 
 <div id="screen-result" class="screen">
+
   <div class="card">
+
     <div class="result-label" style="text-align:center; font-weight:900; color:var(--primary);">TOTAL SCORE</div>
+
     <div class="result-big" id="result-score">0</div>
+
     <div class="result-grid">
+
       <div class="result-cell"><div class="val" id="res-excellent">0</div><div class="lbl">Excel</div></div>
+
       <div class="result-cell"><div class="val" id="res-perfect">0</div><div class="lbl">Great</div></div>
+
       <div class="result-cell"><div class="val" id="res-good">0</div><div class="lbl">Good</div></div>
+
       <div class="result-cell"><div class="val" id="res-try">0</div><div class="lbl">Almost</div></div>
+
     </div>
+
     <div class="log-section">
+
       <table class="log-table">
+
         <thead><tr><th>#</th><th>音名</th><th>誤差</th><th>判定</th><th>点</th></tr></thead>
+
         <tbody id="log-tbody"></tbody>
+
       </table>
+
     </div>
+
   </div>
+
   <button class="btn" onclick="location.reload()">もういちど練習する 🔁</button>
+
 </div>
 
 <script>
+
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx1WFxsM1_fJZIdnWWQ1UmiLUmtx8Nl39ziPVmSjhFwVZplTYlEJh0K6wUpN30RXOg/exec";
 
-// ─── 楽器定義（基準B♭の周波数と移調半音数） ─────────────────────
-// transpose: 実音(C)に対するその楽器の読替え半音シフト量
+
+
 const instrumentSettings = {
+
   "flute":      { baseFreq: 932.33, transpose: 0 },   // C管
+
   "clarinet":   { baseFreq: 466.16, transpose: +2 },  // B♭管 (実音C->記譜D: +2)
+
   "alto_sax":   { baseFreq: 466.16, transpose: +9 },  // E♭管 (実音C->記譜A: +9)
+
   "tenor_sax":  { baseFreq: 233.08, transpose: +2 },  // B♭管 (実音C->記譜D: +2)
+
   "bari_sax":   { baseFreq: 116.54, transpose: +9 },  // E♭管 (実音C->記譜A: +9)
+
   "bass_cl":    { baseFreq: 233.08, transpose: +2 },  // B♭管 (実音C->記譜D: +2)
+
   "trumpet":    { baseFreq: 466.16, transpose: +2 },  // B♭管 (実音C->記譜D: +2)
+
   "horn":       { baseFreq: 349.23, transpose: +7 },  // F管 (実音C->記譜G: +7)
+
   "trombone":   { baseFreq: 233.08, transpose: 0 },   // C管実音読み
+
   "euphonium":  { baseFreq: 233.08, transpose: 0 },   // C管実音読み
+
   "tuba":       { baseFreq: 116.54, transpose: 0 }    // C管実音読み
+
 };
 
-// ─── STATE ───────────────────────────────────────────────
+
+
 let audioCtx, micStream, analyst, source, refOsc, rafId;
+
 let currentLevel = 1, qNum = 0, totalScore = 0, combo = 0;
+
 let refFreq, targetFreq, startTime, userName = "";
+
 let excelCount = 0, greatCount = 0, goodCount = 0, almostCount = 0;
+
 let resultLog = [], lastDetectedCents = null;
-let noteIntervalId = null; 
+
+let noteIntervalId = null;
+
+let evalTimer = null, playRefTimer = null;
+
+
 
 const levelPurposes = { 
+
   1: "💡 同じ音を正確に合わせる練習です", 
+
   2: "💡 5度・4度のピッチ感覚を鍛えます", 
+
   3: "💡 純正律ハーモニーのうねりのない響きを作ります" 
+
 };
 
+
+
 window.addEventListener('DOMContentLoaded', () => {
+
   const saved = localStorage.getItem('pitch_trainer_user_name');
+
   if (saved) document.getElementById('user-name').value = saved;
+
   startFallingNotes(); 
+
 });
 
-// ─── SCREEN TRANSITIONS ─────────────────────────────────
+
+
 function showScreen(id) {
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
   document.getElementById(id).classList.add('active');
 
+
+
   if (id === 'screen-menu' || id === 'screen-login' || id === 'screen-history') {
+
     startFallingNotes();
+
   } else {
+
     stopFallingNotes(); 
+
   }
+
 }
+
+
 
 function goToMenu() {
+
   userName = document.getElementById('user-name').value.trim();
+
   if (!userName) { alert("おなまえをいれてね！"); return; }
+
   localStorage.setItem('pitch_trainer_user_name', userName);
+
   showScreen('screen-menu');
+
 }
 
-// ─── FALLING NOTES ANIMATION ────────────────────────────
+
+
 function startFallingNotes() {
+
   const container = document.getElementById('notes-container');
+
   container.style.display = 'block';
+
   if (noteIntervalId) return;
 
-  const notesList = ['♩', '♪', '♫', '♬', '𝄢', '𝄞', '♭', '♯'];
-  
+
+
+  const notesList = ['♩', '♪', '♫', '♬', '𝄢', '𝄞', '♭', '♯'];  
+
   noteIntervalId = setInterval(() => {
+
     const note = document.createElement('div');
+
     note.className = 'falling-note';
+
     note.textContent = notesList[Math.floor(Math.random() * notesList.length)];
+
     
+
     const startX = (window.innerWidth * 0.7) + (Math.random() * (window.innerWidth * 0.5));
+
     note.style.left = startX + 'px';
+
     note.style.top = '-40px';
+
     
+
     const size = 16 + Math.random() * 18;
+
     note.style.fontSize = size + 'px';
+
     
+
     const duration = 4.5 + Math.random() * 4;
+
     note.style.animation = `diagonalFall ${duration}s linear forwards`;
+
     
+
     container.appendChild(note);
+
     
+
     setTimeout(() => { note.remove(); }, duration * 1000);
+
   }, 450);
+
 }
+
+
 
 function stopFallingNotes() {
+
   const container = document.getElementById('notes-container');
+
   container.style.display = 'none';
+
   clearInterval(noteIntervalId);
+
   noteIntervalId = null;
+
   container.innerHTML = ''; 
+
 }
 
-// ─── START GAME ──────────────────────────────────────────
+
+
 async function startGame(lv) {
+
   currentLevel = lv; qNum = 0; totalScore = 0; combo = 0;
+
   excelCount = 0; greatCount = 0; goodCount = 0; almostCount = 0; resultLog = [];
+
   document.getElementById('level-purpose-text').textContent = levelPurposes[lv];
+
   showScreen('screen-game');
+
   try {
+
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
     if (audioCtx.state === 'suspended') {
+
       await audioCtx.resume();
+
     }
+
     analyst = audioCtx.createAnalyser();
+
     analyst.fftSize = 2048;
+
     source = audioCtx.createMediaStreamSource(micStream);
+
     source.connect(analyst);
+
   } catch(e) { alert("マイクが使えません。ブラウザのマイク許可を確認してください。"); showScreen('screen-menu'); return; }
+
   nextQuestion();
+
 }
 
-// ─── QUESTION CYCLE ──────────────────────────────────────
+
+
 function nextQuestion() {
+
   if (rafId) cancelAnimationFrame(rafId);
+
   if (qNum >= 10) return endGame();
+
   qNum++;
+
   document.getElementById('q-label').textContent = `課題 ${qNum}/10`;
+
   document.getElementById('current-score').textContent = totalScore;
+
   document.getElementById('cent-val').textContent = '--';
+
   document.getElementById('pointer').style.left = '50%';
+
   document.getElementById('countdown-wrap').classList.remove('show');
+
   
+
   const instKey = document.getElementById('user-inst').value;
+
   const instSetting = instrumentSettings[instKey] || instrumentSettings["flute"];
+
   const base = instSetting.baseFreq;
 
+
+
   refFreq = base * Math.pow(2, (Math.floor(Math.random() * 13) - 6) / 12);
+
   
+
   if (currentLevel === 1) targetFreq = refFreq;
+
   else if (currentLevel === 2) targetFreq = refFreq * Math.pow(2, (Math.random() > 0.5 ? 7 : -5) / 12);
+
   else targetFreq = refFreq * 1.25 * Math.pow(2, -13.7/1200); 
 
+
+
   document.getElementById('ref-note').textContent = freqToNote(refFreq, instKey);
+
   document.getElementById('target-note').textContent = freqToNote(targetFreq, instKey);
+
   
+
   setPhase('🎵 きほんの音をきいてね...', '');
+
   playRef(refFreq);
-  setTimeout(() => {
+
+  
+
+  playRefTimer = setTimeout(() => {
+
     stopRef();
+
     setPhase('🎤 まっすぐ演奏してね！', '');
+
     document.getElementById('countdown-wrap').classList.add('show');
+
     startTime = Date.now();
+
     pitchLoop();
-    setTimeout(evaluateFinal, 5000); 
+
+    evalTimer = setTimeout(evaluateFinal, 5000); 
+
   }, 2800);
+
 }
 
-// ─── PITCH DETECTION LOOP ────────────────────────────────
+
+
 function pitchLoop() {
+
   const elapsed = Date.now() - startTime;
+
   const remaining = Math.max(0, 5000 - elapsed);
+
   document.getElementById('countdown-label').textContent = `のこり時間: ${(remaining / 1000).toFixed(2)}秒`;
+
   document.getElementById('prog-fill').style.width = (remaining / 5000) * 100 + '%';
 
+
+
   const buf = new Float32Array(analyst.fftSize);
+
   analyst.getFloatTimeDomainData(buf);
+
   const freq = autoCorrelate(buf, audioCtx.sampleRate);
+
   if (freq > 40 && freq < 2500) {
+
     let cents = 1200 * Math.log2(freq / targetFreq);
+
     while (cents > 600) cents -= 1200; while (cents < -600) cents += 1200;
+
     lastDetectedCents = cents;
+
     updateUI(cents);
+
   }
+
   if (remaining > 0) rafId = requestAnimationFrame(pitchLoop);
+
 }
+
+
 
 function updateUI(diff) {
+
   const el = document.getElementById('cent-val');
+
   el.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(1) + ' ¢';
+
   const abs = Math.abs(diff);
+
   el.className = 'cent-display ' + (abs <= 2 ? 'excellent' : abs <= 10 ? 'perfect' : abs <= 50 ? 'good' : 'off');
+
   document.getElementById('pointer').style.left = Math.max(0, Math.min(100, 50 + diff)) + '%';
+
 }
 
-// ─── EVALUATION ──────────────────────────────────────────
+
+
 function evaluateFinal() {
+
   cancelAnimationFrame(rafId);
+
   const instKey = document.getElementById('user-inst').value;
+
   const finalCents = lastDetectedCents !== null ? lastDetectedCents : 999;
+
   const abs = Math.abs(finalCents);
+
   let resText = "", pts = 0, tag = "";
 
+
+
   if (abs <= 2) { resText = "Excellent ✨"; pts = 50; tag = "tag-excellent"; excelCount++; confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); }
+
   else if (abs <= 10) { resText = "Great 🎯"; pts = 30; tag = "tag-excellent"; greatCount++; confetti({ particleCount: 60 }); }
+
   else if (abs <= 50) { resText = "Good ⭕"; pts = 20; tag = "tag-excellent"; goodCount++; confetti({ particleCount: 30 }); }
+
   else { resText = "Almost 💦"; pts = 10; tag = "tag-almost"; almostCount++; }
 
+
+
   totalScore += (pts * currentLevel);
+
   resultLog.push({ q: qNum, note: freqToNote(targetFreq, instKey), diff: finalCents === 999 ? "--" : finalCents.toFixed(1), result: resText, pts: pts * currentLevel, tag: tag });
+
   sendToGAS(qNum, resText, finalCents, pts * currentLevel);
+
   setTimeout(nextQuestion, 1200);
+
 }
+
+
 
 function passQuestion() {
-  cancelAnimationFrame(rafId); stopRef();
+
+  if (evalTimer) clearTimeout(evalTimer);
+
+  if (playRefTimer) clearTimeout(playRefTimer);
+
+  cancelAnimationFrame(rafId); 
+
+  stopRef();
+
   const instKey = document.getElementById('user-inst').value;
+
   resultLog.push({ q: qNum, note: freqToNote(targetFreq, instKey), diff: "--", result: "パス 🐾", pts: 0, tag: "tag-almost" });
+
   nextQuestion();
+
 }
 
-// ─── AUDIO REFERENCE SOURCE ──────────────────────────────
-function playRef(f) {
+
+
+function quitGame() {
+
+  if (evalTimer) clearTimeout(evalTimer);
+
+  if (playRefTimer) clearTimeout(playRefTimer);
+
+  cancelAnimationFrame(rafId);
+
   stopRef();
+
+  if (micStream) {
+
+    micStream.getTracks().forEach(track => track.stop());
+
+  }
+
+  if (audioCtx) {
+
+    audioCtx.close();
+
+  }
+
+  showScreen('screen-menu');
+
+}
+
+
+
+function playRef(f) {
+
+  stopRef();
+
   const osc1 = audioCtx.createOscillator();
+
   const osc2 = audioCtx.createOscillator();
+
   const gainNode = audioCtx.createGain();
 
+
+
   osc1.type = 'square';
+
   osc2.type = 'triangle';
 
+
+
   osc1.frequency.value = f;
+
   osc2.frequency.value = f * 0.998;
+
+
 
   gainNode.gain.value = 0.8;
 
+
+
   osc1.connect(gainNode);
+
   osc2.connect(gainNode);
+
   gainNode.connect(audioCtx.destination);
 
+
+
   osc1.start();
+
   osc2.start();
 
+
+
   refOsc = {
+
     stop: () => {
+
       osc1.stop();
+
       osc2.stop();
+
     }
+
   };
 
+
+
   gainNode.gain.setValueAtTime(0.7, audioCtx.currentTime);
+
   gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.5);
+
 }   
+
+
+
 function stopRef() { if (refOsc) { try{refOsc.stop();}catch(e){} refOsc = null; } }
-  
-// ─── DATA TRANSMISSION (GAS) ─────────────────────────────
+
+
+
 function sendToGAS(qn, res, diff, pts) {
+
   if (!GAS_URL) return;
+
   fetch(GAS_URL, { 
+
     method: "POST", 
+
     mode: "no-cors", 
-    body: JSON.stringify({ 
-      userName, 
-      instrument: document.getElementById('user-inst').value, 
-      qNum: qn, 
-      result: res, 
-      diff: diff === 999 ? "--" : diff.toFixed(1), 
-      score: pts, 
-      level: currentLevel 
+
+    body: JSON.stringify({
+
+      userName,
+
+      instrument: document.getElementById('user-inst').value,
+
+      qNum: qn,
+
+      result: res,
+
+      diff: diff === 999 ? "--" : diff.toFixed(1),
+
+      score: pts,
+
+      level: currentLevel
+
     }) 
+
   });
+
 }
 
-// ─── END GAME / DISPLAY RESULTS ─────────────────────────
+
+
 function endGame() {
+
   showScreen('screen-result');
+
   document.getElementById('result-score').textContent = totalScore + "点";
+
   document.getElementById('res-excellent').textContent = excelCount;
+
   document.getElementById('res-perfect').textContent = greatCount;
+
   document.getElementById('res-good').textContent = goodCount;
+
   document.getElementById('res-try').textContent = almostCount;
+
   const tb = document.getElementById('log-tbody'); tb.innerHTML = "";
+
   resultLog.forEach(r => tb.innerHTML += `<tr><td>${r.q}</td><td>${r.note}</td><td>${r.diff}¢</td><td><span class="${r.tag}">${r.result}</span></td><td>${r.pts}</td></tr>`);
+
   
+
   let history = JSON.parse(localStorage.getItem('pitch_trainer_history_v2')) || [];
+
   history.push({ date: new Date().toLocaleString(), score: totalScore, level: currentLevel, details: resultLog });
+
   localStorage.setItem('pitch_trainer_history_v2', JSON.stringify(history));
+
 }
 
-// ─── LOCAL STORAGE HISTORY ───────────────────────────────
+
+
 function showHistoryScreen() {
+
   showScreen('screen-history');
+
   const cnt = document.getElementById('history-container'); cnt.innerHTML = "";
+
   let hist = JSON.parse(localStorage.getItem('pitch_trainer_history_v2')) || [];
+
   hist.slice().reverse().forEach(h => {
+
     let dRows = h.details.map(d => `<tr><td>${d.q}</td><td>${d.note}</td><td>${d.diff}¢</td><td>${d.result}</td><td>${d.pts}</td></tr>`).join("");
+
     cnt.innerHTML += `<div class="history-item"><div class="history-summary" onclick="this.parentElement.classList.toggle('open')"><div>${h.date}<br><b>Lv.${h.level}</b></div><b>${h.score}点</b></div><div class="history-details"><table class="log-table"><thead><tr><th>#</th><th>音名</th><th>誤差</th><th>判定</th><th>点</th></tr></thead><tbody>${dRows}</tbody></table></div></div>`;
+
   });
+
 }
+
+
 
 function clearAllHistory() { if(confirm("履歴をすべて消しますか？")) { localStorage.removeItem('pitch_trainer_history_v2'); showHistoryScreen(); } }
 
+
+
 function setPhase(m, c) { const el = document.getElementById('phase-msg'); el.textContent = m; }
 
-// ─── AUTO CORRELATION PITCH DETECTOR ─────────────────────
+
+
 function autoCorrelate(buf, sr) {
+
   let rms = 0; for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
+
   if (Math.sqrt(rms / buf.length) < 0.01) return -1;
+
   let c = new Float32Array(buf.length);
+
   for (let i = 0; i < buf.length; i++) for (let j = 0; j < buf.length - i; j++) c[i] += buf[j] * buf[j + i];
+
   let d = 0; while (c[d] > c[d + 1]) d++;
+
   let maxVal = -1, maxPos = -1;
+
   for (let i = d; i < buf.length; i++) if (c[i] > maxVal) { maxVal = c[i]; maxPos = i; }
+
   return sr / maxPos;
+
 }
 
-// ─── 移調＆カタカナ音名変換（ドレミ表記） ──────────────────
+
+
 function freqToNote(f, instKey) {
-  // 固定ド（カタカナ）配列：C, C#, D, D#, E, F, F#, G, G#, A, A#, B
+
   const doReMiNames = ['ド', 'ド♯', 'レ', 'レ♯', 'ミ', 'ファ', 'ファ♯', 'ソ', 'ソ♯', 'ラ', 'ラ♯', 'シ'];
-  
-  // A4 = 440Hz からの実音(C)ノート番号（C4を0とした相対値）
-  const noteNum = Math.round(12 * Math.log2(f / 440)) + 57; // 57はC4に対するA4のインデックスオフセット
-  
-  // 楽器の移調シフト数を取得
+
+  const noteNum = Math.round(12 * Math.log2(f / 440)) + 57;
+
   const inst = instrumentSettings[instKey] || instrumentSettings["flute"];
+
   const transposedNoteNum = noteNum + inst.transpose;
-  
-  // 12音階に収める
+
   const noteIndex = ((transposedNoteNum % 12) + 12) % 12;
+
   return doReMiNames[noteIndex];
+
 }
+
 </script>
+
 </body>
-</html>
+
+</html> 
