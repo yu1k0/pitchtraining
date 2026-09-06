@@ -49,6 +49,20 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
 .screen-game-measuring .note-display{opacity:.55;}
 .screen-game-measuring .cent-display{font-size:56px;}
 .screen-game-measuring .gauge-wrap{transform:scale(1.03);}
+.interval-help-btn{border:2px solid #ffb3d9;background:#fff;color:var(--secondary);border-radius:999px;padding:6px 10px;font-family:inherit;font-size:12px;font-weight:900;cursor:pointer;}
+.modal-backdrop{position:fixed;inset:0;background:rgba(60,40,55,.28);display:none;align-items:center;justify-content:center;padding:20px;z-index:9999;backdrop-filter:blur(4px);}
+.modal-backdrop.show{display:flex;animation:modalFade .2s ease both;}
+.modal-card{width:min(430px,100%);max-height:85vh;overflow-y:auto;background:#fff;border:2px solid #ffd4e7;border-radius:28px;padding:26px 22px 22px;position:relative;box-shadow:0 24px 60px rgba(255,0,127,.24);animation:modalFloat .42s cubic-bezier(.2,.9,.25,1.15) both;}
+.modal-card h3{text-align:center;color:var(--secondary);margin-bottom:16px;font-size:22px;}
+.modal-close{position:absolute;right:14px;top:10px;border:none;background:#fff1f8;color:var(--secondary);width:34px;height:34px;border-radius:50%;font-size:24px;line-height:1;cursor:pointer;font-weight:900;}
+.interval-help-item{background:#fff8fb;border:1px solid #ffe0ed;border-radius:18px;padding:12px 14px;margin-bottom:10px;}
+.interval-help-title{font-weight:900;color:var(--secondary);font-size:15px;}
+.interval-help-notes{font-family:'Space Mono',monospace;font-weight:900;font-size:18px;margin:3px 0 5px;}
+.interval-help-item p{font-size:12px;line-height:1.65;color:#666;font-weight:700;}
+.interval-help-tip{margin-top:12px;background:#fff1f8;border-radius:16px;padding:12px;color:#8b4768;font-size:12px;line-height:1.6;font-weight:700;}
+@keyframes modalFade{from{opacity:0}to{opacity:1}}
+@keyframes modalFloat{from{opacity:0;transform:translateY(30px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media (prefers-reduced-motion:reduce){.modal-backdrop.show,.modal-card{animation:none;}}
 </style></head><body>
 <div id="notes-container"></div>
 <div id="screen-login" class="screen active"> <div class="card"> <div class="app-title">pitch training♬</div> <div class="app-sub">3秒間のまっすぐなロングトーンで、<br>きれいな音程をマスターしよう！</div> <label>研究員ネーム（おなまえ）</label> <input type="text" id="user-name" placeholder="なまえをいれてね"> <label>担当楽器・声部</label> <select id="user-inst">
@@ -94,9 +108,9 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
 <div id="screen-custom" class="screen">
   <div class="card">
     <h2 style="color:var(--secondary); margin-bottom:16px; text-align:center;">自分でハモリ練習</h2>
-    <div class="app-sub" style="margin-bottom:10px;">根音とハモる音程を自分で選べます</div>
+    <div class="app-sub" style="margin-bottom:10px;">根音（基準音）とハモる音程を選んで、1回ずつテンポよく練習できます</div>
 
-    <label>根音</label>
+    <label>根音（基準音）</label>
     <select id="custom-root">
       <option value="261.63">ド (C)</option>
       <option value="277.18">ド♯ (C♯)</option>
@@ -112,7 +126,10 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
       <option value="493.88">シ (B)</option>
     </select>
 
-    <label>ハモる音程</label>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;">
+      <label style="margin:0;padding-left:10px;">ハモる音程</label>
+      <button type="button" class="interval-help-btn" onclick="openIntervalHelp()">？ 解説</button>
+    </div>
     <select id="custom-interval">
       <option value="fifth">完全5度（3:2）</option>
       <option value="fourth">完全4度（4:3）</option>
@@ -120,7 +137,7 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
       <option value="minor3">短3度・純正律（6:5）</option>
     </select>
 
-    <button class="btn" onclick="startCustomGame()">この設定で練習する 🎶</button>
+    <button class="btn" onclick="startCustomGame()">この音で1回練習する 🎶</button>
   </div>
   <button class="btn btn-back" onclick="showScreen('screen-menu')">← 練習メニューへ</button>
 </div>
@@ -170,7 +187,14 @@ const LV2_ROOT_SUSTAIN_GAIN=0.26; // Lv.2 根音：演奏中の持続音量
 let audioCtx,micStream,analyst,source,refOsc,rafId=null,currentLevel=1,qNum=0,totalScore=0,combo=0,refFreq,targetFreq,lastRefFreq=null,startTime,userName="",excelCount=0,greatCount=0,goodCount=0,almostCount=0,resultLog=[],lastDetectedCents=null,noteIntervalId=null,t1=null,t2=null,t3=null,isCustomMode=false,customRootFreq=null,customInterval="fifth";
 let recentCents=[],measurementSamples=[],smoothedCents=null,lastUiUpdate=0;
 const levelPurposes={1:"💡 同じ音を正確に合わせる練習です",2:"💡 根音を聴きながら、5度・4度のピッチ感覚を鍛えます",3:"💡 純正律ハーモニーのうねりのない響きを作ります"};
-window.addEventListener('DOMContentLoaded',()=>{const saved=localStorage.getItem('pitch_trainer_user_name');if(saved)document.getElementById('user-name').value=saved;startFallingNotes();});
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('pitch_trainer_user_name');
+  if(saved)document.getElementById('user-name').value=saved;
+  startFallingNotes();
+  const modal=document.getElementById('interval-help-modal');
+  modal.addEventListener('click',(e)=>{if(e.target===modal)closeIntervalHelp();});
+});
+document.addEventListener('keydown',(e)=>{if(e.key==='Escape')closeIntervalHelp();});
 let screenTransitionTimer=null;
 function showScreen(id){
   const next=document.getElementById(id);
@@ -241,6 +265,16 @@ function median(values){
 function showCustomSetup(){
   showScreen('screen-custom');
 }
+function openIntervalHelp(){
+  const modal=document.getElementById('interval-help-modal');
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden','false');
+}
+function closeIntervalHelp(){
+  const modal=document.getElementById('interval-help-modal');
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden','true');
+}
 function startCustomGame(){
   customRootFreq=parseFloat(document.getElementById('custom-root').value);
   customInterval=document.getElementById('custom-interval').value;
@@ -308,11 +342,12 @@ async function startGame(lv){
 }
 function nextQuestion(){
   clearAllTimers();
-  if(qNum>=10)return endGame();
+  if(!isCustomMode && qNum>=10)return endGame();
   qNum++;
   resetPitchTracking();
-  document.getElementById('q-label').textContent=`課題 ${qNum}/10`;
+  document.getElementById('q-label').textContent=isCustomMode ? '自由練習' : `課題 ${qNum}/10`;
   document.getElementById('current-score').textContent=totalScore;
+  document.querySelector('.score-badge').style.display=isCustomMode?'none':'block';
   document.getElementById('cent-val').textContent='--';
   document.getElementById('pitch-hint').textContent='';
   document.getElementById('cent-val').className='cent-display';
@@ -429,7 +464,17 @@ function evaluateFinal(){
   if(finalCents===999){
     resultLog.push({q:qNum,note:freqToNote(targetFreq,instKey),diff:"--",result:"音なし 💦",pts:0,tag:"tag-almost"});
     sendToGAS(qNum,"音なし 💦",999,0);
-    t3=setTimeout(nextQuestion,1200);
+    if(isCustomMode){
+      t3=setTimeout(()=>{
+        clearAllTimers();
+        stopMic();
+        isCustomMode=false;
+        document.querySelector('.score-badge').style.display='block';
+        showScreen('screen-custom');
+      },1200);
+    }else{
+      t3=setTimeout(nextQuestion,1200);
+    }
     return;
   }
 
@@ -462,7 +507,18 @@ function evaluateFinal(){
     ? '✨ その音程！キープしよう'
     : (finalCents>0 ? '少し高め。次はほんの少し下へ' : '少し低め。次はほんの少し上へ');
   document.getElementById('pitch-hint').textContent=resultHint;
-  t3=setTimeout(nextQuestion,1400);
+
+  if(isCustomMode){
+    t3=setTimeout(()=>{
+      clearAllTimers();
+      stopMic();
+      isCustomMode=false;
+      document.querySelector('.score-badge').style.display='block';
+      showScreen('screen-custom');
+    },1500);
+  }else{
+    t3=setTimeout(nextQuestion,1400);
+  }
 }
 function passQuestion(){
   document.getElementById('screen-game').classList.remove('screen-game-measuring');
@@ -558,4 +614,38 @@ function clearAllHistory(){if(confirm("履歴をすべて消しますか？")){l
 function setPhase(m,c){const el=document.getElementById('phase-msg');el.textContent=m;}
 function autoCorrelate(buf,sr){let rms=0;for(let i=0;i<buf.length;i++)rms+=buf[i]*buf[i];if(Math.sqrt(rms/buf.length)<0.01)return-1;let c=new Float32Array(buf.length);for(let i=0;i<buf.length;i++)for(let j=0;j<buf.length-i;j++)c[i]+=buf[j]*buf[j+i];let d=0;while(c[d]>c[d+1])d++;let maxVal=-1,maxPos=-1;for(let i=d;i<buf.length;i++)if(c[i]>maxVal){maxVal=c[i];maxPos=i;}return sr/maxPos;}
 function freqToNote(f,instKey){const doReMiNames=['ド','ド♯','レ','レ♯','ミ','ファ','ファ♯','ソ','ソ♯','ラ','ラ♯','シ'];const noteNum=Math.round(12*Math.log2(f/440))+57;const inst=instrumentSettings[instKey]||instrumentSettings["flute"];const transposedNoteNum=noteNum+inst.transpose;const noteIndex=((transposedNoteNum%12)+12)%12;return doReMiNames[noteIndex];}
-</script></body></html>
+</script>
+<div id="interval-help-modal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="interval-help-title">
+    <button type="button" class="modal-close" onclick="closeIntervalHelp()" aria-label="閉じる">×</button>
+    <h3 id="interval-help-title">ハモる音程って？</h3>
+
+    <div class="interval-help-item">
+      <div class="interval-help-title">♪ 完全5度</div>
+      <div class="interval-help-notes">ド ＋ ソ</div>
+      <p>根音から5つ目の音。明るく安定した、広がりのある響きになります。</p>
+    </div>
+
+    <div class="interval-help-item">
+      <div class="interval-help-title">♪ 完全4度</div>
+      <div class="interval-help-notes">ド ＋ ファ</div>
+      <p>根音から4つ目の音。完全5度と同じく、合奏や合唱でよく使う響きです。</p>
+    </div>
+
+    <div class="interval-help-item">
+      <div class="interval-help-title">♪ 長3度（純正律）</div>
+      <div class="interval-help-notes">ド ＋ ミ</div>
+      <p>明るい和音の響き。平均律より少し低めに合わせると、うなりが少ない響きになります。</p>
+    </div>
+
+    <div class="interval-help-item">
+      <div class="interval-help-title">♪ 短3度（純正律）</div>
+      <div class="interval-help-notes">ド ＋ ミ♭</div>
+      <p>少し落ち着いた、やわらかな和音の響き。純正な比率で合わせる練習です。</p>
+    </div>
+
+    <div class="interval-help-tip">💡 まずは「ド＋ソ」の完全5度から試すと、ハモった感じをつかみやすいです。</div>
+  </div>
+</div>
+
+</body></html>
