@@ -45,6 +45,10 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
 .result-big{font-family:'Space Mono',monospace;font-size:80px;font-weight:900;color:var(--secondary);text-align:center;margin:10px 0;}.result-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin:20px 0;}.result-cell{background:#fff5f9;border-radius:20px;padding:12px 4px;text-align:center;border:1px solid #ffe0ed;}.result-cell .val{font-family:'Space Mono',monospace;font-size:22px;font-weight:900;color:var(--secondary);}.result-cell .lbl{font-size:10px;color:var(--muted);margin-top:4px;font-weight:700;}
 .log-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;}.log-table th{color:var(--primary);padding:8px 4px;font-weight:900;text-align:center;border-bottom:2px solid #ffe0ed;}.log-table td{padding:10px 4px;text-align:center;border-bottom:1px solid #fff0f7;}.tag-excellent{background:#e8fdf3;color:#1c9e5a;padding:4px 8px;border-radius:12px;font-weight:900;}.tag-almost{background:#f1f2f6;color:#57606f;padding:4px 8px;border-radius:12px;font-weight:900;}
 .history-box{max-height:280px;overflow-y:auto;border-radius:20px;background:#fff9fb;padding:5px;}.history-item{border-bottom:1px solid #ffe0ed;background:#fff;border-radius:15px;margin-bottom:5px;overflow:hidden;}.history-summary{padding:15px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}.history-summary b{color:var(--secondary);font-size:16px;}.history-details{display:none;padding:10px;background:#fff5f9;}.history-item.open .history-details{display:block;}
+.screen-game-measuring .level-purpose-banner{opacity:.45;transform:scale(.98);}
+.screen-game-measuring .note-display{opacity:.55;}
+.screen-game-measuring .cent-display{font-size:56px;}
+.screen-game-measuring .gauge-wrap{transform:scale(1.03);}
 </style></head><body>
 <div id="notes-container"></div>
 <div id="screen-login" class="screen active"> <div class="card"> <div class="app-title">pitch training♬</div> <div class="app-sub">3秒間のまっすぐなロングトーンで、<br>きれいな音程をマスターしよう！</div> <label>研究員ネーム（おなまえ）</label> <input type="text" id="user-name" placeholder="なまえをいれてね"> <label>担当楽器・声部</label> <select id="user-inst">
@@ -68,11 +72,59 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
 <option value="bass_voice">バス</option>
 </optgroup>
 </select> <button class="btn" onclick="goToMenu()">メニューへ進む ♬</button> <button class="btn btn-outline" onclick="showHistoryScreen()">📊 過去の練習記録</button> </div></div>
-<div id="screen-history" class="screen"> <div class="card"> <h2 style="color:var(--secondary); margin-bottom:15px; text-align:center;">練習の履歴</h2> <div class="history-box" id="history-container"></div> <button class="btn btn-outline" style="border-color:#ff4757; color:#ff4757;" onclick="clearAllHistory()">履歴をすべて消去する</button> </div> <button class="btn btn-back" onclick="showScreen('screen-login')">← もどる</button></div>
-<div id="screen-menu" class="screen"> <div class="card"> <h2 style="color:var(--secondary); margin-bottom:20px; text-align:center;">練習メニュー</h2> <button class="btn" onclick="startGame(1)">🎯 Lv.1：ユニゾン</button> <button class="btn" onclick="startGame(2)">🎵 Lv.2：パワーコード（根音あり）</button> <button class="btn" onclick="startGame(3)">✨ Lv.3：純正律ハーモニー</button> </div> <button class="btn btn-back" onclick="showScreen('screen-login')">← もどる</button></div>
+<div id="screen-history" class="screen"> <div class="card"> <h2 style="color:var(--secondary); margin-bottom:15px; text-align:center;">練習の履歴</h2> <div class="history-box" id="history-container"></div> <button class="btn btn-outline" style="border-color:#ff4757; color:#ff4757;" onclick="clearAllHistory()">履歴をすべて消去する</button> <button class="btn btn-outline" onclick="showCustomSetup()">🎼 自分で音を選んでハモリ練習</button>
+    </div> <button class="btn btn-back" onclick="showScreen('screen-login')">← もどる</button></div>
+<div id="screen-menu" class="screen"> <div class="card">
+    <h2 style="color:var(--secondary); margin-bottom:12px; text-align:center;">練習メニュー</h2>
+    <div style="background:#fff7fb;border:2px solid #ffd1e5;border-radius:20px;padding:12px 14px;margin-bottom:16px;font-size:12px;line-height:1.7;color:#666;font-weight:700;">
+      <div style="text-align:center;color:var(--secondary);font-weight:900;margin-bottom:6px;">はじめての方へ</div>
+      <div style="display:flex;justify-content:space-between;gap:8px;text-align:center;">
+        <div style="flex:1;">①<br>音を聴く</div>
+        <div style="padding-top:8px;">→</div>
+        <div style="flex:1;">②<br>3秒演奏</div>
+        <div style="padding-top:8px;">→</div>
+        <div style="flex:1;">③<br>結果を見る</div>
+      </div>
+    </div> <button class="btn" onclick="startGame(1)">🎯 Lv.1：ユニゾン<br><span style="font-size:12px;font-weight:700;">同じ音をぴったり合わせる</span></button> <button class="btn" onclick="startGame(2)">🎵 Lv.2：パワーコード（根音あり）<br><span style="font-size:12px;font-weight:700;">根音を聴きながら5度・4度を合わせる</span></button> <button class="btn" onclick="startGame(3)">✨ Lv.3：純正律ハーモニー（根音あり）<br><span style="font-size:12px;font-weight:700;">根音を聴きながら純正律3度を合わせる</span></button> </div> <button class="btn btn-back" onclick="showScreen('screen-login')">← もどる</button></div>
+
+<div id="screen-custom" class="screen">
+  <div class="card">
+    <h2 style="color:var(--secondary); margin-bottom:16px; text-align:center;">自分でハモリ練習</h2>
+    <div class="app-sub" style="margin-bottom:10px;">根音とハモる音程を自分で選べます</div>
+
+    <label>根音</label>
+    <select id="custom-root">
+      <option value="261.63">ド (C)</option>
+      <option value="277.18">ド♯ (C♯)</option>
+      <option value="293.66">レ (D)</option>
+      <option value="311.13">レ♯ (D♯)</option>
+      <option value="329.63">ミ (E)</option>
+      <option value="349.23">ファ (F)</option>
+      <option value="369.99">ファ♯ (F♯)</option>
+      <option value="392.00">ソ (G)</option>
+      <option value="415.30">ソ♯ (G♯)</option>
+      <option value="440.00">ラ (A)</option>
+      <option value="466.16">ラ♯ (B♭)</option>
+      <option value="493.88">シ (B)</option>
+    </select>
+
+    <label>ハモる音程</label>
+    <select id="custom-interval">
+      <option value="fifth">完全5度（3:2）</option>
+      <option value="fourth">完全4度（4:3）</option>
+      <option value="major3">長3度・純正律（5:4）</option>
+      <option value="minor3">短3度・純正律（6:5）</option>
+    </select>
+
+    <button class="btn" onclick="startCustomGame()">この設定で練習する 🎶</button>
+  </div>
+  <button class="btn btn-back" onclick="showScreen('screen-menu')">← 練習メニューへ</button>
+</div>
+
 <div id="screen-game" class="screen"> <div class="card"> <div class="game-header"> <div class="q-badge" id="q-label">課題 1/10</div> <div class="score-badge">スコア: <span id="current-score">0</span></div> </div> <div class="level-purpose-banner" id="level-purpose-text">目的を表示中...</div>
 <div class="note-display"> <div class="note-box"> <div class="note-label">基 準 音</div> <div class="note-val" id="ref-note">--</div> </div> <div class="note-arrow">▶</div> <div class="note-box"> <div class="note-label">ねらう音</div> <div class="note-val" id="target-note">--</div> </div> </div>
 <div class="phase-msg" id="phase-msg">準備中...</div>
+    <div id="pitch-hint" style="min-height:24px;text-align:center;font-size:15px;font-weight:900;color:var(--secondary);margin-top:-4px;margin-bottom:4px;"></div>
 <div id="mic-error" style="display:none;background:#fff3f6;border:2px solid #ff9fba;border-radius:18px;padding:12px 14px;margin:8px 0 14px;color:#b33965;font-size:13px;font-weight:700;line-height:1.6;text-align:center;"></div>
 <div class="cent-display" id="cent-val">--</div>
 <div class="gauge-wrap"> <div class="gauge-bg"> <div class="gauge-zone-10"></div> <div class="gauge-zone-2"></div> <div class="gauge-ptr" id="pointer" style="left:50%"></div> </div> <div class="gauge-labels"><span>-50¢</span><span>0¢</span><span>+50¢</span></div> </div>
@@ -111,7 +163,7 @@ const FINAL_WINDOW_MS=700;
 const LV2_ROOT_START_GAIN=0.38;   // Lv.2 根音：最初の聞き取りやすい音量
 const LV2_ROOT_SUSTAIN_GAIN=0.26; // Lv.2 根音：演奏中の持続音量
 
-let audioCtx,micStream,analyst,source,refOsc,rafId=null,currentLevel=1,qNum=0,totalScore=0,combo=0,refFreq,targetFreq,lastRefFreq=null,startTime,userName="",excelCount=0,greatCount=0,goodCount=0,almostCount=0,resultLog=[],lastDetectedCents=null,noteIntervalId=null,t1=null,t2=null,t3=null;
+let audioCtx,micStream,analyst,source,refOsc,rafId=null,currentLevel=1,qNum=0,totalScore=0,combo=0,refFreq,targetFreq,lastRefFreq=null,startTime,userName="",excelCount=0,greatCount=0,goodCount=0,almostCount=0,resultLog=[],lastDetectedCents=null,noteIntervalId=null,t1=null,t2=null,t3=null,isCustomMode=false,customRootFreq=null,customInterval="fifth";
 let recentCents=[],measurementSamples=[],smoothedCents=null,lastUiUpdate=0;
 const levelPurposes={1:"💡 同じ音を正確に合わせる練習です",2:"💡 根音を聴きながら、5度・4度のピッチ感覚を鍛えます",3:"💡 純正律ハーモニーのうねりのない響きを作ります"};
 window.addEventListener('DOMContentLoaded',()=>{const saved=localStorage.getItem('pitch_trainer_user_name');if(saved)document.getElementById('user-name').value=saved;startFallingNotes();});
@@ -182,13 +234,31 @@ function median(values){
   const mid=Math.floor(a.length/2);
   return a.length%2?a[mid]:(a[mid-1]+a[mid])/2;
 }
+function showCustomSetup(){
+  showScreen('screen-custom');
+}
+function startCustomGame(){
+  customRootFreq=parseFloat(document.getElementById('custom-root').value);
+  customInterval=document.getElementById('custom-interval').value;
+  isCustomMode=true;
+  startGame(4);
+}
+function getCustomTarget(root,interval){
+  if(interval==='fifth')return root*1.5;
+  if(interval==='fourth')return root*(4/3);
+  if(interval==='major3')return root*1.25;
+  if(interval==='minor3')return root*1.2;
+  return root;
+}
 async function startGame(lv){
   clearAllTimers();
   stopMic();
   lastRefFreq=null;
   resetPitchTracking();
   currentLevel=lv;qNum=0;totalScore=0;combo=0;excelCount=0;greatCount=0;goodCount=0;almostCount=0;resultLog=[];
-  document.getElementById('level-purpose-text').textContent=levelPurposes[lv];
+  if(lv!==4)isCustomMode=false;
+  document.getElementById('level-purpose-text').textContent=
+    lv===4 ? '💡 自分で選んだ根音と音程でハモリを練習します' : levelPurposes[lv];
 
   const micError=document.getElementById('mic-error');
   micError.style.display='none';
@@ -240,6 +310,7 @@ function nextQuestion(){
   document.getElementById('q-label').textContent=`課題 ${qNum}/10`;
   document.getElementById('current-score').textContent=totalScore;
   document.getElementById('cent-val').textContent='--';
+  document.getElementById('pitch-hint').textContent='';
   document.getElementById('cent-val').className='cent-display';
   document.getElementById('pointer').style.left='50%';
   document.getElementById('countdown-wrap').classList.remove('show');
@@ -250,27 +321,33 @@ function nextQuestion(){
   const instSetting=instrumentSettings[instKey]||instrumentSettings["flute"];
   const base=instSetting.baseFreq;
 
-  let newRefFreq;
-  do{
-    newRefFreq=base*Math.pow(2,(Math.floor(Math.random()*13)-6)/12);
-  }while(lastRefFreq && Math.abs(newRefFreq-lastRefFreq)<1);
-  refFreq=newRefFreq;
-  lastRefFreq=refFreq;
+  if(isCustomMode){
+    refFreq=customRootFreq;
+    targetFreq=getCustomTarget(refFreq,customInterval);
+  }else{
+    let newRefFreq;
+    do{
+      newRefFreq=base*Math.pow(2,(Math.floor(Math.random()*13)-6)/12);
+    }while(lastRefFreq && Math.abs(newRefFreq-lastRefFreq)<1);
+    refFreq=newRefFreq;
+    lastRefFreq=refFreq;
 
-  if(currentLevel===1)targetFreq=refFreq;
-  else if(currentLevel===2)targetFreq=refFreq*Math.pow(2,(Math.random()>0.5?7:-5)/12);
-  else targetFreq=refFreq*1.25*Math.pow(2,-13.7/1200);
+    if(currentLevel===1)targetFreq=refFreq;
+    else if(currentLevel===2)targetFreq=refFreq*Math.pow(2,(Math.random()>0.5?7:-5)/12);
+    else targetFreq=refFreq*1.25;
+  }
 
   document.getElementById('ref-note').textContent=freqToNote(refFreq,instKey);
   document.getElementById('target-note').textContent=freqToNote(targetFreq,instKey);
   setPhase('🎵 きほんの音をきいてね...','');
-  playRef(refFreq,currentLevel===2);
+  playRef(refFreq,currentLevel===2 || currentLevel===3 || isCustomMode);
 
   t1=setTimeout(()=>{
-    if(currentLevel!==2)stopRef();
-    setPhase(currentLevel===2
+    if(!(currentLevel===2 || currentLevel===3 || isCustomMode))stopRef();
+    setPhase((currentLevel===2 || currentLevel===3 || isCustomMode)
       ? '🎤 根音を聴きながら3秒間、まっすぐ演奏してね！'
       : '🎤 3秒間、まっすぐ演奏してね！','');
+    document.getElementById('screen-game').classList.add('screen-game-measuring');
     document.getElementById('countdown-wrap').classList.add('show');
     startTime=Date.now();
     resetPitchTracking();
@@ -319,11 +396,25 @@ function pitchLoop(){
   if(remaining>0)rafId=requestAnimationFrame(pitchLoop);
   else rafId=null;
 }
-function updateUI(diff){const el=document.getElementById('cent-val');el.textContent=(diff>=0?'+':'')+diff.toFixed(1)+' ¢';const abs=Math.abs(diff);el.className='cent-display '+(abs<=2?'excellent':abs<=10?'perfect':abs<=50?'good':'off');document.getElementById('pointer').style.left=Math.max(0,Math.min(100,50+diff))+'%';}
+function updateUI(diff){
+  const el=document.getElementById('cent-val');
+  const hint=document.getElementById('pitch-hint');
+  el.textContent=(diff>=0?'+':'')+diff.toFixed(1)+' ¢';
+
+  const abs=Math.abs(diff);
+  el.className='cent-display '+(abs<=2?'excellent':abs<=10?'perfect':abs<=50?'good':'off');
+
+  if(abs<=2)hint.textContent='✨ ぴったり！そのままキープ';
+  else if(diff>0)hint.textContent='↑ 少し高い　→ 少し下げてみよう';
+  else hint.textContent='↓ 少し低い　→ 少し上げてみよう';
+
+  document.getElementById('pointer').style.left=Math.max(0,Math.min(100,50+diff))+'%';
+}
 function evaluateFinal(){
   if(rafId){cancelAnimationFrame(rafId);rafId=null;}
   if(t2){clearTimeout(t2);t2=null;}
-  if(currentLevel===2)stopRef();
+  if(currentLevel===2 || currentLevel===3 || isCustomMode)stopRef();
+  document.getElementById('screen-game').classList.remove('screen-game-measuring');
 
   const instKey=document.getElementById('user-inst').value;
   const cutoff=Date.now()-FINAL_WINDOW_MS;
@@ -363,15 +454,21 @@ function evaluateFinal(){
     tag:tag
   });
   sendToGAS(qNum,resText,finalCents,pts*currentLevel);
-  t3=setTimeout(nextQuestion,1200);
+  const resultHint=Math.abs(finalCents)<=2
+    ? '✨ その音程！キープしよう'
+    : (finalCents>0 ? '少し高め。次はほんの少し下へ' : '少し低め。次はほんの少し上へ');
+  document.getElementById('pitch-hint').textContent=resultHint;
+  t3=setTimeout(nextQuestion,1400);
 }
 function passQuestion(){
+  document.getElementById('screen-game').classList.remove('screen-game-measuring');
   clearAllTimers();
   const instKey=document.getElementById('user-inst').value;
   resultLog.push({q:qNum,note:freqToNote(targetFreq,instKey),diff:"--",result:"パス 🐾",pts:0,tag:"tag-almost"});
   nextQuestion();
 }
 function quitGame(){
+  document.getElementById('screen-game').classList.remove('screen-game-measuring');
   clearAllTimers();
   stopMic();
   showScreen('screen-menu');
@@ -451,7 +548,7 @@ function sendToGAS(qn,res,diff,pts){
     })
   });
 }
-function endGame(){clearAllTimers();stopMic();showScreen('screen-result');document.getElementById('result-score').textContent=totalScore+"点";document.getElementById('res-excellent').textContent=excelCount;document.getElementById('res-perfect').textContent=greatCount;document.getElementById('res-good').textContent=goodCount;document.getElementById('res-try').textContent=almostCount;const tb=document.getElementById('log-tbody');tb.innerHTML="";resultLog.forEach(r=>tb.innerHTML+=`<tr><td>${r.q}</td><td>${r.note}</td><td>${r.diff}¢</td><td><span class="${r.tag}">${r.result}</span></td><td>${r.pts}</td></tr>`);let history=JSON.parse(localStorage.getItem('pitch_trainer_history_v2'))||[];history.push({date:new Date().toLocaleString(),score:totalScore,level:currentLevel,details:resultLog});localStorage.setItem('pitch_trainer_history_v2',JSON.stringify(history));}
+function endGame(){document.getElementById('screen-game').classList.remove('screen-game-measuring');clearAllTimers();stopMic();showScreen('screen-result');document.getElementById('result-score').textContent=totalScore+"点";document.getElementById('res-excellent').textContent=excelCount;document.getElementById('res-perfect').textContent=greatCount;document.getElementById('res-good').textContent=goodCount;document.getElementById('res-try').textContent=almostCount;const tb=document.getElementById('log-tbody');tb.innerHTML="";resultLog.forEach(r=>tb.innerHTML+=`<tr><td>${r.q}</td><td>${r.note}</td><td>${r.diff}¢</td><td><span class="${r.tag}">${r.result}</span></td><td>${r.pts}</td></tr>`);let history=JSON.parse(localStorage.getItem('pitch_trainer_history_v2'))||[];history.push({date:new Date().toLocaleString(),score:totalScore,level:currentLevel,details:resultLog});localStorage.setItem('pitch_trainer_history_v2',JSON.stringify(history));}
 function showHistoryScreen(){showScreen('screen-history');const cnt=document.getElementById('history-container');cnt.innerHTML="";let hist=JSON.parse(localStorage.getItem('pitch_trainer_history_v2'))||[];hist.slice().reverse().forEach(h=>{let dRows=h.details.map(d=>`<tr><td>${d.q}</td><td>${d.note}</td><td>${d.diff}¢</td><td>${d.result}</td><td>${d.pts}</td></tr>`).join("");cnt.innerHTML+=`<div class="history-item"><div class="history-summary" onclick="this.parentElement.classList.toggle('open')"><div>${h.date}<br><b>Lv.${h.level}</b></div><b>${h.score}点</b></div><div class="history-details"><table class="log-table"><thead><tr><th>#</th><th>音名</th><th>誤差</th><th>判定</th><th>点</th></tr></thead><tbody>${dRows}</tbody></table></div></div>`;});}
 function clearAllHistory(){if(confirm("履歴をすべて消しますか？")){localStorage.removeItem('pitch_trainer_history_v2');showHistoryScreen();}}
 function setPhase(m,c){const el=document.getElementById('phase-msg');el.textContent=m;}
