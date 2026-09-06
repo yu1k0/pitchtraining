@@ -47,7 +47,27 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
 .history-box{max-height:280px;overflow-y:auto;border-radius:20px;background:#fff9fb;padding:5px;}.history-item{border-bottom:1px solid #ffe0ed;background:#fff;border-radius:15px;margin-bottom:5px;overflow:hidden;}.history-summary{padding:15px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}.history-summary b{color:var(--secondary);font-size:16px;}.history-details{display:none;padding:10px;background:#fff5f9;}.history-item.open .history-details{display:block;}
 </style></head><body>
 <div id="notes-container"></div>
-<div id="screen-login" class="screen active"> <div class="card"> <div class="app-title">pitch training♬</div> <div class="app-sub">3秒間のまっすぐなロングトーンで、<br>きれいな音程をマスターしよう！</div> <label>研究員ネーム（おなまえ）</label> <input type="text" id="user-name" placeholder="なまえをいれてね"> <label>担当楽器</label> <select id="user-inst"> <option value="flute">フルート (C管)</option> <option value="clarinet">クラリネット (B♭管)</option> <option value="alto_sax">アルトサックス (E♭管)</option> <option value="tenor_sax">テナーサックス (B♭管)</option> <option value="bari_sax">バリトンサックス (E♭管)</option> <option value="bass_cl">バスクラリネット (B♭管)</option> <option value="trumpet">トランペット (B♭管)</option> <option value="horn">ホルン (F管)</option> <option value="trombone">トロンボーン (C管/実音読み)</option> <option value="euphonium">ユーフォニウム (C管/実音読み)</option> <option value="tuba">チューバ (C管/実音読み)</option> </select> <button class="btn" onclick="goToMenu()">メニューへ進む ♬</button> <button class="btn btn-outline" onclick="showHistoryScreen()">📊 過去の練習記録</button> </div></div>
+<div id="screen-login" class="screen active"> <div class="card"> <div class="app-title">pitch training♬</div> <div class="app-sub">3秒間のまっすぐなロングトーンで、<br>きれいな音程をマスターしよう！</div> <label>研究員ネーム（おなまえ）</label> <input type="text" id="user-name" placeholder="なまえをいれてね"> <label>担当楽器・声部</label> <select id="user-inst">
+<optgroup label="吹奏楽">
+<option value="flute">フルート (C管)</option>
+<option value="clarinet">クラリネット (B♭管)</option>
+<option value="alto_sax">アルトサックス (E♭管)</option>
+<option value="tenor_sax">テナーサックス (B♭管)</option>
+<option value="bari_sax">バリトンサックス (E♭管)</option>
+<option value="bass_cl">バスクラリネット (B♭管)</option>
+<option value="trumpet">トランペット (B♭管)</option>
+<option value="horn">ホルン (F管)</option>
+<option value="trombone">トロンボーン (C管/実音読み)</option>
+<option value="euphonium">ユーフォニウム (C管/実音読み)</option>
+<option value="tuba">チューバ (C管/実音読み)</option>
+</optgroup>
+<optgroup label="合唱">
+<option value="soprano">ソプラノ</option>
+<option value="alto_voice">アルト</option>
+<option value="tenor_voice">テノール</option>
+<option value="bass_voice">バス</option>
+</optgroup>
+</select> <button class="btn" onclick="goToMenu()">メニューへ進む ♬</button> <button class="btn btn-outline" onclick="showHistoryScreen()">📊 過去の練習記録</button> </div></div>
 <div id="screen-history" class="screen"> <div class="card"> <h2 style="color:var(--secondary); margin-bottom:15px; text-align:center;">練習の履歴</h2> <div class="history-box" id="history-container"></div> <button class="btn btn-outline" style="border-color:#ff4757; color:#ff4757;" onclick="clearAllHistory()">履歴をすべて消去する</button> </div> <button class="btn btn-back" onclick="showScreen('screen-login')">← もどる</button></div>
 <div id="screen-menu" class="screen"> <div class="card"> <h2 style="color:var(--secondary); margin-bottom:20px; text-align:center;">練習メニュー</h2> <button class="btn" onclick="startGame(1)">🎯 Lv.1：ユニゾン</button> <button class="btn" onclick="startGame(2)">🎵 Lv.2：パワーコード（根音あり）</button> <button class="btn" onclick="startGame(3)">✨ Lv.3：純正律ハーモニー</button> </div> <button class="btn btn-back" onclick="showScreen('screen-login')">← もどる</button></div>
 <div id="screen-game" class="screen"> <div class="card"> <div class="game-header"> <div class="q-badge" id="q-label">課題 1/10</div> <div class="score-badge">スコア: <span id="current-score">0</span></div> </div> <div class="level-purpose-banner" id="level-purpose-text">目的を表示中...</div>
@@ -63,7 +83,26 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
 <div id="screen-result" class="screen"> <div class="card"> <div class="result-label" style="text-align:center; font-weight:900; color:var(--primary);">TOTAL SCORE</div> <div class="result-big" id="result-score">0</div> <div class="result-grid"> <div class="result-cell"><div class="val" id="res-excellent">0</div><div class="lbl">Excel</div></div> <div class="result-cell"><div class="val" id="res-perfect">0</div><div class="lbl">Great</div></div> <div class="result-cell"><div class="val" id="res-good">0</div><div class="lbl">Good</div></div> <div class="result-cell"><div class="val" id="res-try">0</div><div class="lbl">Almost</div></div> </div> <div class="log-section"> <table class="log-table"> <thead><tr><th>#</th><th>音名</th><th>誤差</th><th>判定</th><th>点</th></tr></thead> <tbody id="log-tbody"></tbody> </table> </div> </div> <button class="btn" onclick="location.reload()">もういちど練習する 🔁</button></div>
 <script>
 const GAS_URL="https://script.google.com/macros/s/AKfycbx1WFxsM1_fJZIdnWWQ1UmiLUmtx8Nl39ziPVmSjhFwVZplTYlEJh0K6wUpN30RXOg/exec";
-const instrumentSettings={"flute":{baseFreq:932.33,transpose:0},"clarinet":{baseFreq:466.16,transpose:2},"alto_sax":{baseFreq:466.16,transpose:9},"tenor_sax":{baseFreq:233.08,transpose:2},"bari_sax":{baseFreq:116.54,transpose:9},"bass_cl":{baseFreq:233.08,transpose:2},"trumpet":{baseFreq:466.16,transpose:2},"horn":{baseFreq:349.23,transpose:7},"trombone":{baseFreq:233.08,transpose:0},"euphonium":{baseFreq:233.08,transpose:0},"tuba":{baseFreq:116.54,transpose:0}};
+const instrumentSettings={
+"flute":{baseFreq:932.33,transpose:0},
+"clarinet":{baseFreq:466.16,transpose:2},
+"alto_sax":{baseFreq:466.16,transpose:9},
+"tenor_sax":{baseFreq:233.08,transpose:2},
+"bari_sax":{baseFreq:116.54,transpose:9},
+"bass_cl":{baseFreq:233.08,transpose:2},
+"trumpet":{baseFreq:466.16,transpose:2},
+"horn":{baseFreq:349.23,transpose:7},
+"trombone":{baseFreq:233.08,transpose:0},
+"euphonium":{baseFreq:233.08,transpose:0},
+"tuba":{baseFreq:116.54,transpose:0},
+
+/* 合唱4声部：すべて実音表記。
+   各声部で無理の出にくい中心音を設定し、そこからランダム出題する。 */
+"soprano":{baseFreq:523.25,transpose:0},    // C5
+"alto_voice":{baseFreq:349.23,transpose:0}, // F4
+"tenor_voice":{baseFreq:233.08,transpose:0},// B♭3
+"bass_voice":{baseFreq:146.83,transpose:0}  // D3
+};
 const MEASURE_DURATION=3000;
 const UI_UPDATE_INTERVAL=80;
 const SMOOTHING_ALPHA=0.18;
@@ -394,7 +433,24 @@ function playRef(f,sustain=false){
   };
 }
 function stopRef(){if(refOsc){try{refOsc.stop();}catch(e){}refOsc=null;}}
-function sendToGAS(qn,res,diff,pts){if(!GAS_URL)return;fetch(GAS_URL,{method:"POST",mode:"no-cors",body:JSON.stringify({userName,instrument:document.getElementById('user-inst').value,qNum:qn,result:res,diff:diff===999?"--":diff.toFixed(1),score:pts,level:currentLevel})});}
+function sendToGAS(qn,res,diff,pts){
+  if(!GAS_URL)return;
+  const instSelect=document.getElementById('user-inst');
+  fetch(GAS_URL,{
+    method:"POST",
+    mode:"no-cors",
+    body:JSON.stringify({
+      userName,
+      instrument:instSelect.value,
+      instrumentName:instSelect.options[instSelect.selectedIndex].text,
+      qNum:qn,
+      result:res,
+      diff:diff===999?"--":diff.toFixed(1),
+      score:pts,
+      level:currentLevel
+    })
+  });
+}
 function endGame(){clearAllTimers();stopMic();showScreen('screen-result');document.getElementById('result-score').textContent=totalScore+"点";document.getElementById('res-excellent').textContent=excelCount;document.getElementById('res-perfect').textContent=greatCount;document.getElementById('res-good').textContent=goodCount;document.getElementById('res-try').textContent=almostCount;const tb=document.getElementById('log-tbody');tb.innerHTML="";resultLog.forEach(r=>tb.innerHTML+=`<tr><td>${r.q}</td><td>${r.note}</td><td>${r.diff}¢</td><td><span class="${r.tag}">${r.result}</span></td><td>${r.pts}</td></tr>`);let history=JSON.parse(localStorage.getItem('pitch_trainer_history_v2'))||[];history.push({date:new Date().toLocaleString(),score:totalScore,level:currentLevel,details:resultLog});localStorage.setItem('pitch_trainer_history_v2',JSON.stringify(history));}
 function showHistoryScreen(){showScreen('screen-history');const cnt=document.getElementById('history-container');cnt.innerHTML="";let hist=JSON.parse(localStorage.getItem('pitch_trainer_history_v2'))||[];hist.slice().reverse().forEach(h=>{let dRows=h.details.map(d=>`<tr><td>${d.q}</td><td>${d.note}</td><td>${d.diff}¢</td><td>${d.result}</td><td>${d.pts}</td></tr>`).join("");cnt.innerHTML+=`<div class="history-item"><div class="history-summary" onclick="this.parentElement.classList.toggle('open')"><div>${h.date}<br><b>Lv.${h.level}</b></div><b>${h.score}点</b></div><div class="history-details"><table class="log-table"><thead><tr><th>#</th><th>音名</th><th>誤差</th><th>判定</th><th>点</th></tr></thead><tbody>${dRows}</tbody></table></div></div>`;});}
 function clearAllHistory(){if(confirm("履歴をすべて消しますか？")){localStorage.removeItem('pitch_trainer_history_v2');showHistoryScreen();}}
