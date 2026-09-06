@@ -69,6 +69,8 @@ const UI_UPDATE_INTERVAL=80;
 const SMOOTHING_ALPHA=0.18;
 const MEDIAN_WINDOW=5;
 const FINAL_WINDOW_MS=700;
+const LV2_ROOT_START_GAIN=0.38;   // Lv.2 根音：最初の聞き取りやすい音量
+const LV2_ROOT_SUSTAIN_GAIN=0.26; // Lv.2 根音：演奏中の持続音量
 
 let audioCtx,micStream,analyst,source,refOsc,rafId=null,currentLevel=1,qNum=0,totalScore=0,combo=0,refFreq,targetFreq,lastRefFreq=null,startTime,userName="",excelCount=0,greatCount=0,goodCount=0,almostCount=0,resultLog=[],lastDetectedCents=null,noteIntervalId=null,t1=null,t2=null,t3=null;
 let recentCents=[],measurementSamples=[],smoothedCents=null,lastUiUpdate=0;
@@ -355,12 +357,12 @@ function playRef(f,sustain=false){
 
   const now=audioCtx.currentTime;
   gainNode.gain.setValueAtTime(0.0001,now);
-  gainNode.gain.exponentialRampToValueAtTime(sustain?0.28:0.50,now+0.08);
+  gainNode.gain.exponentialRampToValueAtTime(sustain?LV2_ROOT_START_GAIN:0.50,now+0.08);
 
   if(sustain){
-    // 最初は聴き取りやすく、その後は演奏を邪魔しにくい音量へ下げて持続
-    gainNode.gain.setValueAtTime(0.28,now+2.0);
-    gainNode.gain.linearRampToValueAtTime(0.16,now+2.7);
+    // 最初はしっかり聴こえる音量、その後もハーモニーを感じやすい音量で持続
+    gainNode.gain.setValueAtTime(LV2_ROOT_START_GAIN,now+2.0);
+    gainNode.gain.linearRampToValueAtTime(LV2_ROOT_SUSTAIN_GAIN,now+2.7);
   }else{
     gainNode.gain.setValueAtTime(0.50,now+2.0);
     gainNode.gain.linearRampToValueAtTime(0.0001,now+2.5);
