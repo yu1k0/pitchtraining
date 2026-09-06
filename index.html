@@ -63,6 +63,16 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
 @keyframes modalFade{from{opacity:0}to{opacity:1}}
 @keyframes modalFloat{from{opacity:0;transform:translateY(30px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media (prefers-reduced-motion:reduce){.modal-backdrop.show,.modal-card{animation:none;}}
+.level-row{display:flex;align-items:center;gap:10px;margin-top:14px;}
+.level-row .level-main-btn{flex:1;margin-top:0;}
+.level-help-btn{
+  flex:0 0 44px;width:44px;height:44px;border-radius:50%;
+  border:3px solid var(--secondary);background:#fff;color:var(--secondary);
+  font-family:inherit;font-size:18px;font-weight:900;cursor:pointer;
+  box-shadow:0 5px 12px rgba(255,0,127,.12);
+  transition:transform .15s ease,background .2s ease;
+}
+.level-help-btn:active{transform:scale(.94);}
 </style></head><body>
 <div id="notes-container"></div>
 <div id="screen-login" class="screen active"> <div class="card"> <div class="app-title">pitch training♬</div> <div class="app-sub">3秒間のまっすぐなロングトーンで、<br>きれいな音程をマスターしよう！</div> <label>研究員ネーム（おなまえ）</label> <input type="text" id="user-name" placeholder="なまえをいれてね"> <label>担当楽器・声部</label> <select id="user-inst">
@@ -99,7 +109,16 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
         <div style="padding-top:8px;">→</div>
         <div style="flex:1;">③<br>結果を見る</div>
       </div>
-    </div> <button class="btn" onclick="startGame(1)">🎯 Lv.1：ユニゾン<br><span style="font-size:12px;font-weight:700;">同じ音をぴったり合わせる</span></button> <button class="btn" onclick="startGame(2)">🎵 Lv.2：パワーコード（根音あり）<br><span style="font-size:12px;font-weight:700;">根音を聴きながら5度・4度を合わせる</span></button> <button class="btn" onclick="startGame(3)">✨ Lv.3：純正律ハーモニー（根音あり）<br><span style="font-size:12px;font-weight:700;">根音を聴きながら純正律3度を合わせる</span></button>
+    </div> <div class="level-row">
+  <button class="btn level-main-btn" onclick="startGame(1)">🎯 Lv.1：ユニゾン<br><span style="font-size:12px;font-weight:700;">同じ音をぴったり合わせる</span></button>
+  <button type="button" class="level-help-btn" onclick="openLevelHelp(1)">？</button>
+</div> <div class="level-row">
+  <button class="btn level-main-btn" onclick="startGame(2)">🎵 Lv.2：パワーコード（根音あり）<br><span style="font-size:12px;font-weight:700;">根音を聴きながら5度・4度を合わせる</span></button>
+  <button type="button" class="level-help-btn" onclick="openLevelHelp(2)">？</button>
+</div> <div class="level-row">
+  <button class="btn level-main-btn" onclick="startGame(3)">✨ Lv.3：純正律ハーモニー（根音あり）<br><span style="font-size:12px;font-weight:700;">根音を聴きながら純正律3度を合わせる</span></button>
+  <button type="button" class="level-help-btn" onclick="openLevelHelp(3)">？</button>
+</div>
 <button class="btn btn-outline" style="margin-top:18px;" onclick="showCustomSetup()">
   🎼 自由練習モード<br>
   <span style="font-size:12px;font-weight:700;">根音とハモる音程を自分で選ぶ</span>
@@ -191,10 +210,23 @@ window.addEventListener('DOMContentLoaded',()=>{
   const saved=localStorage.getItem('pitch_trainer_user_name');
   if(saved)document.getElementById('user-name').value=saved;
   startFallingNotes();
-  const modal=document.getElementById('interval-help-modal');
-  modal.addEventListener('click',(e)=>{if(e.target===modal)closeIntervalHelp();});
+
+  const intervalModal=document.getElementById('interval-help-modal');
+  if(intervalModal){
+    intervalModal.addEventListener('click',(e)=>{if(e.target===intervalModal)closeIntervalHelp();});
+  }
+
+  const menuModal=document.getElementById('menu-help-modal');
+  if(menuModal){
+    menuModal.addEventListener('click',(e)=>{if(e.target===menuModal)closeMenuHelp();});
+  }
+
+  const levelModal=document.getElementById('level-help-modal');
+  if(levelModal){
+    levelModal.addEventListener('click',(e)=>{if(e.target===levelModal)closeLevelHelp();});
+  }
 });
-document.addEventListener('keydown',(e)=>{if(e.key==='Escape')closeIntervalHelp();});
+document.addEventListener('keydown',(e)=>{if(e.key==='Escape')closeAllModals();});
 let screenTransitionTimer=null;
 function showScreen(id){
   const next=document.getElementById(id);
@@ -274,6 +306,70 @@ function closeIntervalHelp(){
   const modal=document.getElementById('interval-help-modal');
   modal.classList.remove('show');
   modal.setAttribute('aria-hidden','true');
+}
+function openMenuHelp(){
+  const modal=document.getElementById('menu-help-modal');
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden','false');
+}
+function closeMenuHelp(){
+  const modal=document.getElementById('menu-help-modal');
+  if(modal){
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+  }
+}
+function openLevelHelp(level){
+  const modal=document.getElementById('level-help-modal');
+  const title=document.getElementById('level-help-title');
+  const content=document.getElementById('level-help-content');
+
+  const help={
+    1:{
+      title:'🎯 Lv.1：ユニゾン',
+      body:`<div class="interval-help-item">
+        <div class="interval-help-title">同じ音をぴったり合わせる練習</div>
+        <div class="interval-help-notes">例：ド ＋ ド</div>
+        <p>基準音とまったく同じ高さの音を出します。まずは「高い・低い」を感じ取り、自分で音程を調整する力を身につける基本練習です。</p>
+      </div>
+      <div class="interval-help-tip">💡 音程感を身につける最初のステップです。</div>`
+    },
+    2:{
+      title:'🎵 Lv.2：パワーコード',
+      body:`<div class="interval-help-item">
+        <div class="interval-help-title">根音（基準音）を聴きながら5度・4度を合わせる練習</div>
+        <div class="interval-help-notes">例：ド ＋ ソ ／ ド ＋ ファ</div>
+        <p>完全5度は「ドとソ」、完全4度は「ドとファ」のような関係です。根音が鳴り続けるので、二つの音がきれいに重なって「ハモる」感覚を耳で感じながら練習できます。</p>
+      </div>
+      <div class="interval-help-tip">💡 吹奏楽や合唱で、安定した響きを作るための練習です。</div>`
+    },
+    3:{
+      title:'✨ Lv.3：純正律ハーモニー',
+      body:`<div class="interval-help-item">
+        <div class="interval-help-title">根音（基準音）を聴きながら純正律3度を合わせる練習</div>
+        <div class="interval-help-notes">例：ド ＋ ミ</div>
+        <p>長3度の音を、うなりが少なく美しく響く「純正律」の位置に合わせます。平均律より少し低めになることがポイントです。</p>
+      </div>
+      <div class="interval-help-tip">💡 和音の中で、より美しいハーモニーを作るための上級練習です。</div>`
+    }
+  };
+
+  title.textContent=help[level].title;
+  content.innerHTML=help[level].body;
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden','false');
+}
+function closeLevelHelp(){
+  const modal=document.getElementById('level-help-modal');
+  if(modal){
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+  }
+}
+function closeAllModals(){
+  closeIntervalHelp();
+  closeMenuHelp();
+  closeLevelHelp();
 }
 function startCustomGame(){
   customRootFreq=parseFloat(document.getElementById('custom-root').value);
@@ -645,6 +741,49 @@ function freqToNote(f,instKey){const doReMiNames=['ド','ド♯','レ','レ♯',
     </div>
 
     <div class="interval-help-tip">💡 まずは「ド＋ソ」の完全5度から試すと、ハモった感じをつかみやすいです。</div>
+  </div>
+</div>
+
+
+<div id="menu-help-modal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="menu-help-title">
+    <button type="button" class="modal-close" onclick="closeMenuHelp()" aria-label="閉じる">×</button>
+    <h3 id="menu-help-title">練習メニューの解説</h3>
+
+    <div class="interval-help-item">
+      <div class="interval-help-title">🎯 Lv.1：ユニゾン</div>
+      <div class="interval-help-notes">同じ音を合わせる</div>
+      <p>まずはここから。基準音とまったく同じ高さの音を出す練習です。音程感の土台づくりに向いています。</p>
+    </div>
+
+    <div class="interval-help-item">
+      <div class="interval-help-title">🎵 Lv.2：パワーコード（根音あり）</div>
+      <div class="interval-help-notes">例：ド ＋ ソ / ド ＋ ファ</div>
+      <p>根音（基準音）を聴きながら、完全5度や完全4度の響きを合わせる練習です。ハモった感覚をつかみやすいレベルです。</p>
+    </div>
+
+    <div class="interval-help-item">
+      <div class="interval-help-title">✨ Lv.3：純正律ハーモニー（根音あり）</div>
+      <div class="interval-help-notes">例：ド ＋ ミ</div>
+      <p>根音（基準音）を聴きながら、純正律の長3度で合わせる練習です。うなりの少ない美しい響きを目指します。</p>
+    </div>
+
+    <div class="interval-help-item">
+      <div class="interval-help-title">🎼 自由練習モード</div>
+      <div class="interval-help-notes">音を自分で選んで1回ずつ</div>
+      <p>根音（基準音）とハモる音程を自分で選んで、1回ずつテンポよく練習できます。気になる音や和音をすぐ試したいときに便利です。</p>
+    </div>
+
+    <div class="interval-help-tip">💡 迷ったら、まずは「Lv.1 → Lv.2 → Lv.3」の順で試すのがおすすめです。</div>
+  </div>
+</div>
+
+
+<div id="level-help-modal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="level-help-title">
+    <button type="button" class="modal-close" onclick="closeLevelHelp()" aria-label="閉じる">×</button>
+    <h3 id="level-help-title">レベル解説</h3>
+    <div id="level-help-content"></div>
   </div>
 </div>
 
