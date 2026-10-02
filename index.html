@@ -121,13 +121,13 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
 </div>
 <button class="btn btn-outline" style="margin-top:18px;" onclick="showCustomSetup()">
   🎼 自由練習モード<br>
-  <span style="font-size:12px;font-weight:700;">根音とハモる音程を自分で選ぶ</span>
+  <span style="font-size:12px;font-weight:700;">根音と練習する音程を自分で選ぶ</span>
 </button> </div> <button class="btn btn-back" onclick="showScreen('screen-login')">← もどる</button></div>
 
 <div id="screen-custom" class="screen">
   <div class="card">
     <h2 style="color:var(--secondary); margin-bottom:16px; text-align:center;">自分でハモリ練習</h2>
-    <div class="app-sub" style="margin-bottom:10px;">根音（基準音）とハモる音程を選んで、1回ずつテンポよく練習できます</div>
+    <div class="app-sub" style="margin-bottom:10px;">根音（基準音）と練習する音程を選んで、1回ずつテンポよく練習できます</div>
 
     <label>根音（基準音）</label>
     <select id="custom-root">
@@ -150,6 +150,7 @@ label{font-size:13px;color:var(--primary);display:block;margin-bottom:6px;margin
       <button type="button" class="interval-help-btn" onclick="openIntervalHelp()">？ 解説</button>
     </div>
     <select id="custom-interval">
+      <option value="unison">ユニゾン（同じ音）</option>
       <option value="fifth">完全5度（3:2）</option>
       <option value="fourth">完全4度（4:3）</option>
       <option value="major3">長3度・純正律（5:4）</option>
@@ -378,6 +379,7 @@ function startCustomGame(){
   startGame(4);
 }
 function getCustomTarget(root,interval){
+  if(interval==='unison')return root;
   if(interval==='fifth')return root*1.5;
   if(interval==='fourth')return root*(4/3);
   if(interval==='major3')return root*1.25;
@@ -715,6 +717,12 @@ function freqToNote(f,instKey){const doReMiNames=['ド','ド♯','レ','レ♯',
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="interval-help-title">
     <button type="button" class="modal-close" onclick="closeIntervalHelp()" aria-label="閉じる">×</button>
     <h3 id="interval-help-title">ハモる音程って？</h3>
+
+    <div class="interval-help-item">
+      <div class="interval-help-title">♪ ユニゾン</div>
+      <div class="interval-help-notes">ド ＋ ド</div>
+      <p>根音（基準音）とまったく同じ高さの音を合わせる練習です。音程感の基本づくりに向いています。</p>
+    </div>
 
     <div class="interval-help-item">
       <div class="interval-help-title">♪ 完全5度</div>
